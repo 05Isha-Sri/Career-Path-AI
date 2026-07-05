@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerPath AI - Placement Prep Portal</title>
+    
+    <!-- Modern typography from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Link to the Vanilla CSS Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Notification system for errors/messages -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- ===================================================================
+         AUTHENTICATION SCREEN (Login and Registration)
+         =================================================================== -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>CareerPath AI</h2>
+                <p>Your ultimate placement preparation companion</p>
+            </div>
+            
+            <!-- Auth Tab Buttons -->
+            <div class="auth-tabs">
+                <button id="tab-login-btn" class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button id="tab-register-btn" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Log In</button>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="reg-username">Username</label>
+                    <input type="text" id="reg-username" placeholder="Create username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" placeholder="Create password" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Account Type</label>
+                    <select id="reg-role">
+                        <option value="STUDENT">Student (Placement Aspirant)</option>
+                        <option value="ADMIN">Administrator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         MAIN PORTAL LAYOUT (Shown after logging in)
+         =================================================================== -->
+    <div id="app-screen" class="app-layout hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="logo-icon">🚀</span>
+                <h2>CareerPath AI</h2>
+            </div>
+            
+            <!-- Navigation items -->
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-target="dashboard-view" onclick="switchView('dashboard-view')">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+                <button class="nav-item" data-target="companies-view" onclick="switchView('companies-view')">
+                    <span class="nav-icon">🏢</span> Companies
+                </button>
+                <button class="nav-item" data-target="roadmap-view" onclick="switchView('roadmap-view')">
+                    <span class="nav-icon">🗺️</span> Roadmap
+                </button>
+                <button class="nav-item" data-target="aptitude-view" onclick="switchView('aptitude-view')">
+                    <span class="nav-icon">🧠</span> Aptitude Practice
+                </button>
+                <button class="nav-item" data-target="mocktest-view" onclick="switchView('mocktest-view')">
+                    <span class="nav-icon">⏱️</span> Mock Assessment
+                </button>
+                <button class="nav-item" data-target="coding-view" onclick="switchView('coding-view')">
+                    <span class="nav-icon">💻</span> Coding Practice
+                </button>
+                <button class="nav-item" data-target="resources-view" onclick="switchView('resources-view')">
+                    <span class="nav-icon">📚</span> Resources
+                </button>
+                <button id="admin-nav-btn" class="nav-item admin-only hidden" data-target="admin-view" onclick="switchView('admin-view')">
+                    <span class="nav-icon">⚙️</span> Admin Console
+                </button>
+            </nav>
+
+            <!-- User profile footer inside sidebar -->
+            <div class="sidebar-footer">
+                <div class="user-profile-info">
+                    <div id="username-display" class="user-name">Loading...</div>
+                    <div id="role-display" class="user-role">Student</div>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()" title="Logout">
+                    <span class="logout-icon">🚪</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="view-title">Dashboard</h1>
+                <!-- Company Status Display -->
+                <div class="company-status">
+                    <span id="active-company-badge" class="badge">No Company Selected</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="dashboard-view" class="view-panel">
+                    <!-- Metric Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon green">🗺️</div>
+                            <div class="metric-info">
+                                <h3>Roadmap Completed</h3>
+                                <div id="stat-roadmap" class="metric-value">0%</div>
+                                <p id="stat-roadmap-sub">Select a company first</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon blue">⏱️</div>
+                            <div class="metric-info">
+                                <h3>Mock Tests Taken</h3>
+                                <div id="stat-tests" class="metric-value">0</div>
+                                <p>Assessments completed</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon purple">💻</div>
+                            <div class="metric-info">
+                                <h3>Coding Solved</h3>
+                                <div id="stat-coding" class="metric-value">0</div>
+                                <p>Challenges marked complete</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon orange">🎯</div>
+                            <div class="metric-info">
+                                <h3>Average Score</h3>
+                                <div id="stat-score" class="metric-value">0%</div>
+                                <p>Aptitude accuracy</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Welcome & Quickstart section -->
+                    <div class="dashboard-sections">
+                        <div class="dashboard-panel welcome-panel">
+                            <h2>Welcome, <span id="welcome-username">Student</span>! 👋</h2>
+                            <p>Get ready to clear your placement recruitment process. Follow these 4 simple steps to boost your readiness:</p>
+                            <ul class="guide-steps">
+                                <li><strong>1. Select your target company</strong> in the <strong>Companies</strong> tab.</li>
+                                <li><strong>2. Track topics</strong> in your customized 4-Week <strong>Roadmap</strong>.</li>
+                                <li><strong>3. Read notes & watch videos</strong> in the <strong>Resources</strong> tab.</li>
+                                <li><strong>4. Practice Aptitude</strong> and take <strong>Mock Tests</strong> to build accuracy and speed.</li>
+                            </ul>
+                        </div>
+                        <div class="dashboard-panel history-panel">
+                            <h2>Aptitude Test History</h2>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>Correct Answers</th>
+                                            <th>Total Questions</th>
+                                            <th>Score Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="test-history-rows">
+                                        <tr>
+                                            <td colspan="4" class="text-center">No tests completed yet.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. COMPANIES VIEW -->
+                <section id="companies-view" class="view-panel hidden">
+                    <p class="section-desc">Select the company you are preparing for to unlock company-specific topics, roadmaps, and preparation resources.</p>
+                    
+                    <!-- Company Selection Grid -->
+                    <div id="company-grid" class="company-grid">
+                        <!-- Loaded dynamically from backend -->
+                    </div>
+
+                    <!-- Detailed Company Profile panel (hidden until a company is loaded) -->
+                    <div id="company-profile-panel" class="company-profile-card hidden">
+                        <div class="profile-header">
+                            <h2 id="profile-company-name">TCS Prep Guide</h2>
+                            <span class="badge badge-success">Active Target</span>
+                        </div>
+                        <p id="profile-company-desc">Company details go here...</p>
+                        
+                        <div class="topics-container">
+                            <div class="topic-column">
+                                <h3 class="topic-header text-blue">🧠 Aptitude Topics</h3>
+                                <ul id="profile-aptitude-topics" class="topic-list">
+                                    <!-- Loaded dynamically -->
+                                </ul>
+                            </div>
+                            <div class="topic-column">
+                                <h3 class="topic-header text-green">💻 Coding Topics</h3>
+                                <ul id="profile-coding-topics" class="topic-list">
+                                    <!-- Loaded dynamically -->
+                                </ul>
+                            </div>
+                            <div class="topic-column">
+                                <h3 class="topic-header text-purple">🤝 Interview Topics</h3>
+                                <ul id="profile-interview-topics" class="topic-list">
+                                    <!-- Loaded dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. ROADMAP VIEW -->
+                <section id="roadmap-view" class="view-panel hidden">
+                    <p class="section-desc">A structured 4-week timeline built specifically for your selected target company. Tick off topics as you study them to track your progress.</p>
+                    
+                    <div id="roadmap-placeholder" class="alert alert-info text-center">
+                        Please select a target company under the <strong>Companies</strong> page to view your custom roadmap.
+                    </div>
+
+                    <div id="roadmap-timeline" class="timeline hidden">
+                        <!-- Loaded dynamically from backend -->
+                    </div>
+                </section>
+
+                <!-- 4. APTITUDE PRACTICE VIEW -->
+                <section id="aptitude-view" class="view-panel hidden">
+                    <p class="section-desc">Select a topic category to practice aptitude questions at your own pace. You can view explanations immediately after attempting.</p>
+                    
+                    <!-- Category Selection -->
+                    <div class="practice-categories">
+                        <button class="btn btn-outline active" onclick="loadAptitudePractice('QUANTITATIVE', this)">Quantitative Aptitude</button>
+                        <button class="btn btn-outline" onclick="loadAptitudePractice('LOGICAL', this)">Logical Reasoning</button>
+                        <button class="btn btn-outline" onclick="loadAptitudePractice('VERBAL', this)">Verbal Ability</button>
+                    </div>
+
+                    <!-- Question Container -->
+                    <div id="practice-card" class="question-card hidden">
+                        <div class="question-header">
+                            <span id="practice-num" class="question-number">Question 1 of 5</span>
+                            <span id="practice-category" class="badge">QUANTITATIVE</span>
+                        </div>
+                        <h2 id="practice-question-text" class="question-text">Question text goes here?</h2>
+                        
+                        <div class="options-list">
+                            <label class="option-item">
+                                <input type="radio" name="practice-option" value="A" onchange="enablePracticeSubmit()">
+                                <span class="option-label">A.</span> <span id="opt-practice-a">Option A</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="practice-option" value="B" onchange="enablePracticeSubmit()">
+                                <span class="option-label">B.</span> <span id="opt-practice-b">Option B</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="practice-option" value="C" onchange="enablePracticeSubmit()">
+                                <span class="option-label">C.</span> <span id="opt-practice-c">Option C</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="practice-option" value="D" onchange="enablePracticeSubmit()">
+                                <span class="option-label">D.</span> <span id="opt-practice-d">Option D</span>
+                            </label>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="question-actions">
+                            <button id="practice-prev-btn" class="btn btn-secondary" onclick="navigatePractice(-1)">Previous</button>
+                            <button id="practice-submit-btn" class="btn btn-primary" onclick="submitPracticeAnswer()" disabled>Check Answer</button>
+                            <button id="practice-next-btn" class="btn btn-secondary" onclick="navigatePractice(1)">Next</button>
+                        </div>
+
+                        <!-- Feedback and explanation block -->
+                        <div id="practice-feedback" class="feedback-panel hidden">
+                            <div id="feedback-status" class="feedback-title">Correct!</div>
+                            <p id="practice-explanation" class="feedback-desc">Explanation goes here...</p>
+                        </div>
+                    </div>
+
+                    <div id="practice-empty" class="alert alert-info text-center hidden">
+                        No questions available for this category yet.
+                    </div>
+                </section>
+
+                <!-- 5. MOCK ASSESSMENT VIEW -->
+                <section id="mocktest-view" class="view-panel hidden">
+                    
+                    <!-- Pre-test landing state -->
+                    <div id="mock-start-panel" class="mock-start-card">
+                        <h2>Aptitude Mock Assessment</h2>
+                        <p>Simulate a real-time placement assessment test. The test contains randomized quantitative, logical, and verbal aptitude questions.</p>
+                        <div class="mock-rules">
+                            <h3>Assessment Rules:</h3>
+                            <ul>
+                                <li>⏱️ <strong>Time Limit</strong>: 10 Minutes</li>
+                                <li>📝 <strong>Questions</strong>: 10 MCQ Questions</li>
+                                <li>🚀 <strong>Auto-Submit</strong>: The test will auto-submit when the timer runs out.</li>
+                                <li>📊 <strong>Score Logging</strong>: Results are saved to track your placement preparedness.</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary btn-lg" onclick="startMockTest()">Start Assessment</button>
+                    </div>
+
+                    <!-- Active Assessment Interface -->
+                    <div id="mock-test-panel" class="mock-test-interface hidden">
+                        <div class="test-header">
+                            <div class="timer-display">
+                                Time Remaining: <span id="test-timer" class="text-danger">10:00</span>
+                            </div>
+                            <div id="test-progress-num" class="progress-info">Question 1 of 10</div>
+                        </div>
+
+                        <!-- Progress Bar indicator -->
+                        <div class="progress-bar-container">
+                            <div id="test-progress-bar" class="progress-bar" style="width: 10%"></div>
+                        </div>
+
+                        <!-- Question Area -->
+                        <div class="mock-question-container">
+                            <h3 id="mock-question-text" class="question-text">A train travels 120 km in 2 hours. What is its speed?</h3>
+                            
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="radio" name="mock-option" value="A" onchange="saveMockAnswer()">
+                                    <span class="option-label">A.</span> <span id="opt-mock-a">40 km/h</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="mock-option" value="B" onchange="saveMockAnswer()">
+                                    <span class="option-label">B.</span> <span id="opt-mock-b">50 km/h</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="mock-option" value="C" onchange="saveMockAnswer()">
+                                    <span class="option-label">C.</span> <span id="opt-mock-c">60 km/h</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="mock-option" value="D" onchange="saveMockAnswer()">
+                                    <span class="option-label">D.</span> <span id="opt-mock-d">70 km/h</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Active test buttons -->
+                        <div class="test-actions">
+                            <button id="mock-prev-btn" class="btn btn-secondary" onclick="navigateMock(-1)">Previous</button>
+                            <button class="btn btn-success" onclick="confirmSubmitMock()">Submit Test</button>
+                            <button id="mock-next-btn" class="btn btn-secondary" onclick="navigateMock(1)">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Test Score Results Screen -->
+                    <div id="mock-result-panel" class="mock-result-card hidden">
+                        <div class="result-icon">🎯</div>
+                        <h2>Assessment Completed!</h2>
+                        <p>Your mock test has been scored and saved to the database.</p>
+                        
+                        <div class="result-stats">
+                            <div class="res-stat-box">
+                                <span class="res-stat-label">Score</span>
+                                <span id="res-score" class="res-stat-value">16/20</span>
+                            </div>
+                            <div class="res-stat-box">
+                                <span class="res-stat-label">Percentage</span>
+                                <span id="res-percent" class="res-stat-value">80%</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="resetMockView()">Back to Assessments</button>
+                    </div>
+                </section>
+
+                <!-- 6. CODING PRACTICE VIEW -->
+                <section id="coding-view" class="view-panel hidden">
+                    <p class="section-desc">Study common placement interview coding questions. Review the problem statement, sample inputs/outputs, and solution code written in Java.</p>
+                    
+                    <!-- Coding Level Selection -->
+                    <div class="coding-tabs">
+                        <button class="coding-tab active" onclick="filterCodingQuestions('ALL', this)">All Levels</button>
+                        <button class="coding-tab" onclick="filterCodingQuestions('BEGINNER', this)">Beginner</button>
+                        <button class="coding-tab" onclick="filterCodingQuestions('INTERMEDIATE', this)">Intermediate</button>
+                        <button class="coding-tab" onclick="filterCodingQuestions('ADVANCED', this)">Advanced</button>
+                    </div>
+
+                    <!-- Table of Coding Problems -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Problem Name</th>
+                                    <th>Difficulty</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coding-table-rows">
+                                <!-- Loaded dynamically from backend -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 7. RESOURCES VIEW -->
+                <section id="resources-view" class="view-panel hidden">
+                    <p class="section-desc">Study guides, articles, and video playlists. Filtered by topic name to keep your placement studies targeted.</p>
+                    
+                    <div class="resource-selector">
+                        <label for="resource-topic-select">Filter by Topic:</label>
+                        <select id="resource-topic-select" onchange="loadResources(this.value)">
+                            <option value="ALL">-- All Topics --</option>
+                            <option value="OOP">Object-Oriented Programming (OOP)</option>
+                            <option value="DBMS">Database Management System (DBMS)</option>
+                            <option value="SQL">SQL Queries</option>
+                            <option value="Percentages">Percentages</option>
+                            <option value="Time and Work">Time and Work</option>
+                        </select>
+                    </div>
+
+                    <div id="resources-list" class="resources-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- 8. ADMIN VIEW -->
+                <section id="admin-view" class="view-panel hidden">
+                    <div class="admin-grid">
+                        <!-- Admin metrics -->
+                        <div class="admin-panel stats-panel">
+                            <h2>Platform Statistics</h2>
+                            <div class="admin-stats-grid">
+                                <div class="admin-stat-card">
+                                    <span class="admin-stat-num" id="admin-stat-students">0</span>
+                                    <span class="admin-stat-title">Total Students</span>
+                                </div>
+                                <div class="admin-stat-card">
+                                    <span class="admin-stat-num" id="admin-stat-tests">0</span>
+                                    <span class="admin-stat-title">Tests Taken</span>
+                                </div>
+                                <div class="admin-stat-card">
+                                    <span class="admin-stat-num" id="admin-stat-companies">0</span>
+                                    <span class="admin-stat-title">Companies</span>
+                                </div>
+                            </div>
+
+                            <h3 class="margin-top-md">Student Performance</h3>
+                            <div class="table-container max-height-sm">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Username</th>
+                                            <th>Tests Taken</th>
+                                            <th>Average Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-students-rows">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Data Adding Forms -->
+                        <div class="admin-panel forms-panel">
+                            <h2>Content Management</h2>
+                            
+                            <!-- Tab controls inside forms -->
+                            <div class="form-tabs">
+                                <button class="form-tab-btn active" onclick="switchAdminForm('company-form-sec', this)">Add Company</button>
+                                <button class="form-tab-btn" onclick="switchAdminForm('aptitude-form-sec', this)">Add Aptitude</button>
+                                <button class="form-tab-btn" onclick="switchAdminForm('coding-form-sec', this)">Add Coding</button>
+                                <button class="form-tab-btn" onclick="switchAdminForm('resource-form-sec', this)">Add Resource</button>
+                            </div>
+
+                            <!-- Add Company Form -->
+                            <div id="company-form-sec" class="admin-form-section">
+                                <h3>Add New Target Company</h3>
+                                <form onsubmit="handleAdminAddCompany(event)">
+                                    <div class="form-group">
+                                        <label>Company Name</label>
+                                        <input type="text" id="admin-comp-name" placeholder="e.g. Wipro, Accenture" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea id="admin-comp-desc" placeholder="Details about company recruitment process..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Company</button>
+                                </form>
+                            </div>
+
+                            <!-- Add Aptitude Question Form (Hidden) -->
+                            <div id="aptitude-form-sec" class="admin-form-section hidden">
+                                <h3>Add Aptitude Practice Question</h3>
+                                <form onsubmit="handleAdminAddAptitude(event)">
+                                    <div class="form-group">
+                                        <label>Category</label>
+                                        <select id="admin-apt-cat">
+                                            <option value="QUANTITATIVE">Quantitative Aptitude</option>
+                                            <option value="LOGICAL">Logical Reasoning</option>
+                                            <option value="VERBAL">Verbal Ability</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Question Text</label>
+                                        <textarea id="admin-apt-text" placeholder="Write question details here..." required></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Option A</label>
+                                            <input type="text" id="admin-apt-a" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Option B</label>
+                                            <input type="text" id="admin-apt-b" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Option C</label>
+                                            <input type="text" id="admin-apt-c" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Option D</label>
+                                            <input type="text" id="admin-apt-d" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Correct Option</label>
+                                        <select id="admin-apt-correct">
+                                            <option value="A">Option A</option>
+                                            <option value="B">Option B</option>
+                                            <option value="C">Option C</option>
+                                            <option value="D">Option D</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Explanation</label>
+                                        <textarea id="admin-apt-exp" placeholder="Step-by-step solution details..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Question</button>
+                                </form>
+                            </div>
+
+                            <!-- Add Coding Question Form (Hidden) -->
+                            <div id="coding-form-sec" class="admin-form-section hidden">
+                                <h3>Add Coding Practice Problem</h3>
+                                <form onsubmit="handleAdminAddCoding(event)">
+                                    <div class="form-group">
+                                        <label>Problem Title</label>
+                                        <input type="text" id="admin-code-title" placeholder="e.g. Reverse an Array" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Difficulty</label>
+                                        <select id="admin-code-diff">
+                                            <option value="BEGINNER">Beginner</option>
+                                            <option value="INTERMEDIATE">Intermediate</option>
+                                            <option value="ADVANCED">Advanced</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Problem Statement</label>
+                                        <textarea id="admin-code-stmt" placeholder="Enter problem instructions..." required></textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Sample Input</label>
+                                            <textarea id="admin-code-input" placeholder="Sample Input..."></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sample Output</label>
+                                            <textarea id="admin-code-output" placeholder="Sample Output..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Java Solution Code</label>
+                                        <textarea id="admin-code-sol" placeholder="public static void main..." class="code-font"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Explanation</label>
+                                        <textarea id="admin-code-exp" placeholder="Logical explanation of code..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Problem</button>
+                                </form>
+                            </div>
+
+                            <!-- Add Resource Form (Hidden) -->
+                            <div id="resource-form-sec" class="admin-form-section hidden">
+                                <h3>Add Recommended Resource</h3>
+                                <form onsubmit="handleAdminAddResource(event)">
+                                    <div class="form-group">
+                                        <label>Topic Name</label>
+                                        <input type="text" id="admin-res-topic" placeholder="e.g. OOP, DBMS, Percentages" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Resource Title</label>
+                                        <input type="text" id="admin-res-title" placeholder="e.g. Java Encapsulation Guide" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Resource Type</label>
+                                        <select id="admin-res-type">
+                                            <option value="NOTES">Notes / Article</option>
+                                            <option value="VIDEO">Video Playlist</option>
+                                            <option value="QUESTIONS">Practice Questions</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Resource URL</label>
+                                        <input type="url" id="admin-res-url" placeholder="https://..." required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Resource</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================================================================
+         NATIVE DIALOG MODAL (For displaying coding question details)
+         =================================================================== -->
+    <dialog id="coding-modal" class="modal-dialog">
+        <div class="modal-header">
+            <h2 id="modal-title">Problem Title</h2>
+            <!-- Native close button -->
+            <button class="modal-close-btn" onclick="closeCodingModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-difficulty">
+                Difficulty: <span id="modal-diff" class="badge">BEGINNER</span>
+            </div>
+            
+            <h3>Problem Statement</h3>
+            <p id="modal-statement">Problem statement details go here...</p>
+
+            <div class="sample-io-container">
+                <div class="io-box">
+                    <strong>Sample Input:</strong>
+                    <pre id="modal-input">None</pre>
+                </div>
+                <div class="io-box">
+                    <strong>Sample Output:</strong>
+                    <pre id="modal-output">None</pre>
+                </div>
+            </div>
+
+            <h3>Java Solution Code</h3>
+            <pre class="code-block"><code id="modal-solution">public class Solution {}</code></pre>
+
+            <h3>Explanation</h3>
+            <p id="modal-explanation">Explanation goes here...</p>
+        </div>
+        <div class="modal-footer">
+            <label class="completion-checkbox">
+                <input type="checkbox" id="modal-complete-check" onchange="toggleCodingQuestionProgress()">
+                Mark this problem as completed
+            </label>
+            <button class="btn btn-secondary" onclick="closeCodingModal()">Close</button>
+        </div>
+    </dialog>
+
+    <!-- Load the main JS application file -->
+    <script src="js/app.js"></script>
+</body>
+</html>
