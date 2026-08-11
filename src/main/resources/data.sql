@@ -3,15 +3,16 @@
 -- Uses INSERT IGNORE to prevent duplicates when restarted.
 -- ===================================================================
 
--- 1. Insert Companies
+-- 1. Insert Companies (TCS, Infosys, Cognizant, Accenture, Capgemini)
 INSERT IGNORE INTO companies (id, name, description) VALUES 
 (1, 'TCS', 'Tata Consultancy Services - Focuses on quantitative aptitude, English verbal ability, and foundation programming.'),
 (2, 'Infosys', 'Infosys - Focuses on logical reasoning, analytical puzzle-solving, and pseudo-code analysis.'),
-(3, 'Zoho', 'Zoho Corporation - Emphasizes core programming logic, algorithms, OOP concepts, and design rounds.'),
-(4, 'Amazon', 'Amazon - Expects high-level coding, advanced Data Structures (Trees, Graphs, DP), and System Design.');
+(3, 'Cognizant', 'Cognizant - Focuses on quantitative aptitude, analytical capability, English communication, and basic coding.'),
+(4, 'Accenture', 'Accenture - Tests cognitive assessment, critical reasoning, problem-solving, and technical logic.'),
+(5, 'Capgemini', 'Capgemini - Focuses on arithmetic, English, game-based logical reasoning, and programming logic.');
 
 -- 2. Insert Company Topics (Aptitude, Coding, Interview)
--- For TCS (Company ID: 1)
+-- TCS (Company ID: 1)
 INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
 (1, 1, 'APTITUDE', 'Percentages'),
 (2, 1, 'APTITUDE', 'Profit and Loss'),
@@ -23,7 +24,7 @@ INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
 (8, 1, 'INTERVIEW', 'DBMS'),
 (9, 1, 'INTERVIEW', 'SQL');
 
--- For Infosys (Company ID: 2)
+-- Infosys (Company ID: 2)
 INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
 (10, 2, 'APTITUDE', 'Logical Reasoning'),
 (11, 2, 'APTITUDE', 'Data Interpretation'),
@@ -32,66 +33,106 @@ INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
 (14, 2, 'INTERVIEW', 'OOP'),
 (15, 2, 'INTERVIEW', 'Computer Networks');
 
--- For Zoho (Company ID: 3)
+-- Cognizant (Company ID: 3)
 INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
-(16, 3, 'APTITUDE', 'Aptitude Puzzles'),
-(17, 3, 'CODING', 'Arrays & Strings'),
-(18, 3, 'CODING', 'Recursion'),
-(19, 3, 'INTERVIEW', 'OOP Principles'),
-(20, 3, 'INTERVIEW', 'DBMS & SQL');
+(16, 3, 'APTITUDE', 'Quantitative Aptitude'),
+(17, 3, 'APTITUDE', 'English Communication'),
+(18, 3, 'CODING', 'Basic Data Structures'),
+(19, 3, 'INTERVIEW', 'OOP Concepts'),
+(20, 3, 'INTERVIEW', 'DBMS & SQL Joins');
 
--- For Amazon (Company ID: 4)
+-- Accenture (Company ID: 4)
 INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
-(21, 4, 'APTITUDE', 'Advanced Aptitude'),
-(22, 4, 'CODING', 'Dynamic Programming'),
-(23, 4, 'CODING', 'Binary Trees'),
-(24, 4, 'INTERVIEW', 'System Design'),
-(25, 4, 'INTERVIEW', 'OOP & OOP Design Patterns');
+(21, 4, 'APTITUDE', 'Critical Reasoning'),
+(22, 4, 'APTITUDE', 'Abstract Reasoning'),
+(23, 4, 'CODING', 'Algorithms'),
+(24, 4, 'INTERVIEW', 'Cloud Fundamentals'),
+(25, 4, 'INTERVIEW', 'DBMS & Java');
+
+-- Capgemini (Company ID: 5)
+INSERT IGNORE INTO company_topics (id, company_id, category, topic_name) VALUES
+(26, 5, 'APTITUDE', 'Game-Based Aptitude'),
+(27, 5, 'APTITUDE', 'Numerical Ability'),
+(28, 5, 'CODING', 'Data Structures'),
+(29, 5, 'INTERVIEW', 'Core Java Programming'),
+(30, 5, 'INTERVIEW', 'SQL Queries');
 
 
 -- 3. Insert Roadmaps (Weekly Plans)
 -- TCS (Company ID: 1)
 INSERT IGNORE INTO roadmaps (id, company_id, week_number, topic_name, description) VALUES
-(1, 1, 1, 'Percentages & Ratios', 'Study percentages, ratio, proportion, and average. Practice 20 basic MCQ questions.'),
+(1, 1, 1, 'Percentages & Ratios', 'Study percentages, ratio, proportion, and average. Practice basic MCQ questions.'),
 (2, 1, 2, 'Time and Work', 'Learn Time & Work, Time & Distance formulas and shortcut tricks for train problems.'),
 (3, 1, 3, 'Arrays & Strings', 'Master linear search, array traversal, reversing strings, and palindrome checks in Java.'),
 (4, 1, 4, 'OOP & DBMS', 'Revise OOP features (Inheritance, Polymorphism) and practice basic SQL Select queries.');
 
--- Zoho (Company ID: 3)
+-- Infosys (Company ID: 2)
 INSERT IGNORE INTO roadmaps (id, company_id, week_number, topic_name, description) VALUES
-(5, 3, 1, 'Arrays & Matrices', 'Work on array elements, sub-arrays, transposing matrices, and sorting algorithms.'),
-(6, 3, 2, 'Recursion Basics', 'Understand recursion call stack. Practice factorial, fibonacci, and string permutations recursively.'),
-(7, 3, 3, 'Object-Oriented Design', 'Build custom classes representing real-world systems (e.g., Library Management System).'),
-(8, 3, 4, 'DBMS & SQL Joins', 'Revise Normalization rules, database indexing, and write complex JOIN SQL queries.');
+(5, 2, 1, 'Logical Reasoning', 'Solve series completion, coding-decoding, blood relations, and syllogisms.'),
+(6, 2, 2, 'Pseudo-code Analysis', 'Learn to trace outputs and analyze logic in pseudo-code scripts.'),
+(7, 2, 3, 'Searching & Sorting', 'Practice Linear Search, Binary Search, Bubble Sort, and Selection Sort in Java.'),
+(8, 2, 4, 'OOP & Networking', 'Study OOP fundamentals and basic networking concepts (TCP/IP, OSI layers).');
+
+-- Cognizant (Company ID: 3)
+INSERT IGNORE INTO roadmaps (id, company_id, week_number, topic_name, description) VALUES
+(9, 3, 1, 'Quantitative Focus', 'Revise Profit & Loss, Percentages, and Simple Interest formulas.'),
+(10, 3, 2, 'Verbal Ability', 'Improve sentence correction, vocabulary, and reading comprehension.'),
+(11, 3, 3, 'Basic Arrays', 'Practice basic operations like finding max/min elements in arrays.'),
+(12, 3, 4, 'DBMS Concepts', 'Revise database normalization, keys, and basic SQL commands.');
 
 
 -- 4. Insert Default Users (for testing)
--- Admin User: admin / admin
--- Student User: student / student
 INSERT IGNORE INTO users (id, username, password, email, role, selected_company_id) VALUES
 (1, 'admin', 'admin', 'admin@careerpath.com', 'ADMIN', 1),
 (2, 'student', 'student', 'student@careerpath.com', 'STUDENT', 1);
 
 
 -- 5. Insert Aptitude Questions (MCQs)
--- Category: QUANTITATIVE
-INSERT IGNORE INTO aptitude_questions (id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
-(1, 'QUANTITATIVE', 'A train travels 120 km in 2 hours. Find its speed in km/h.', '40', '50', '60', '70', 'C', 'Speed = Distance / Time = 120 km / 2 hours = 60 km/h.'),
-(2, 'QUANTITATIVE', 'If the cost price of an item is Rs. 150 and selling price is Rs. 180, what is the profit percentage?', '10%', '15%', '20%', '25%', 'C', 'Profit = 180 - 150 = 30. Profit % = (Profit / Cost Price) * 100 = (30 / 150) * 100 = 20%.'),
-(3, 'QUANTITATIVE', 'A can complete a work in 10 days, and B can do it in 15 days. How long will they take to complete it together?', '5 days', '6 days', '7 days', '8 days', 'B', 'Together work rate = 1/10 + 1/15 = (3+2)/30 = 5/30 = 1/6. So they take 6 days.'),
-(4, 'QUANTITATIVE', 'What is 15% of 200?', '15', '20', '30', '40', 'C', '15% of 200 = (15 / 100) * 200 = 30.');
+-- Clear out bulk default questions. We keep only ONE template question
+-- so that you have a visual syntax model when writing your own imports.
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(1, 1, 'QUANTITATIVE', 'Template Question: A train travels 120 km in 2 hours. Find its speed in km/h.', '40', '50', '60', '70', 'C', 'Speed = Distance / Time = 120 km / 2 hours = 60 km/h.');
 
--- Category: LOGICAL
-INSERT IGNORE INTO aptitude_questions (id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
-(5, 'LOGICAL', 'Look at the series: 2, 4, 8, 16, 32, ... What number should come next?', '48', '56', '64', '72', 'C', 'Each number is multiplied by 2 to get the next number: 32 * 2 = 64.'),
-(6, 'LOGICAL', 'Find the odd one out: Apple, Mango, Carrot, Banana.', 'Apple', 'Mango', 'Carrot', 'Banana', 'C', 'Apple, Mango, and Banana are fruits, while Carrot is a vegetable.'),
-(7, 'LOGICAL', 'If CAT is coded as 3120, how is DOG coded?', '4157', '4156', '4167', '4158', 'A', 'Coding is based on alphabet positions: D=4, O=15, G=7. So DOG is coded as 4157.');
+-- Seeded Verbal Questions for Specific Companies (TCS, Infosys, Cognizant, Accenture, Capgemini)
+-- First 5: TCS (Company ID: 1)
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(101, 1, 'VERBAL', 'Choose the word that is most nearly opposite in meaning to "Scarce".', 'Rare', 'Abundant', 'Limited', 'Insufficient', 'B', 'Abundant means existing in large quantities, which is the opposite of scarce.'),
+(102, 1, 'VERBAL', 'Choose the word that is most nearly similar in meaning to "Diligent".', 'Lazy', 'Careless', 'Hardworking', 'Slow', 'C', 'Diligent means hardworking, careful, and persistent.'),
+(103, 1, 'VERBAL', 'Choose the correctly spelled word.', 'Accomodation', 'Accommodation', 'Acommodation', 'Accommadation', 'B', 'Accommodation is the correct spelling.'),
+(104, 1, 'VERBAL', 'Fill in the blank: She has been working in this company _____ 2021.', 'For', 'Since', 'From', 'At', 'B', 'Since is used with a specific point in time.'),
+(105, 1, 'VERBAL', 'Choose the correct meaning of the idiom "Hit the nail on the head."', 'To hit someone', 'To speak loudly', 'To describe exactly what is causing a situation', 'To repair something', 'C', 'The idiom means to identify or describe something accurately.');
 
--- Category: VERBAL
-INSERT IGNORE INTO aptitude_questions (id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
-(8, 'VERBAL', 'Choose the correct synonym for "ABANDON":', 'Keep', 'Forsake', 'Adopt', 'Cherish', 'B', '"Abandon" means to leave or desert. "Forsake" shares the same meaning.'),
-(9, 'VERBAL', 'Complete the sentence: She is ______ honest girl.', 'a', 'an', 'the', 'no article', 'B', 'The word "honest" begins with a silent "h", producing a vowel sound ("on-ist"). Therefore, we use "an".'),
-(10, 'VERBAL', 'Identify the antonym of "ANCIENT":', 'Old', 'Modern', 'Historic', 'Antique', 'B', '"Ancient" means very old. Its opposite/antonym is "Modern".');
+-- Next 5: Infosys (Company ID: 2)
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(106, 2, 'VERBAL', 'Choose the one-word substitution for "A person who loves books."', 'Bibliophile', 'Philanthropist', 'Linguist', 'Orator', 'A', 'A bibliophile is a person who loves or collects books.'),
+(107, 2, 'VERBAL', 'Find the error in the sentence: "Neither of the players are ready for the match."', 'Neither', 'are', 'ready', 'No Error', 'B', 'Neither is singular, so the correct verb is is, not are.'),
+(108, 2, 'VERBAL', 'Arrange the words to form a meaningful sentence: P. always, Q. speaks, R. politely, S. she', 'PQRS', 'SPQR', 'SQRP', 'SRQP', 'B', 'The correct sentence is "She always speaks politely."'),
+(109, 2, 'VERBAL', 'Choose the sentence with the correct punctuation.', 'Let''s eat, Grandma!', 'Lets eat Grandma!', 'Lets eat, Grandma.', 'Let''s eat Grandma.', 'A', 'The comma correctly separates the person being addressed, changing the meaning of the sentence.'),
+(110, 2, 'VERBAL', 'Choose the word that best completes the sentence: "The manager appreciated his _____ approach to solving problems."', 'Careless', 'Systematic', 'Random', 'Carefree', 'B', 'Systematic means organized and methodical, making it the most appropriate choice.');
+
+-- Next 5: Cognizant (Company ID: 3)
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(111, 3, 'VERBAL', 'Choose the word that is most nearly similar in meaning to "Reluctant."', 'Willing', 'Hesitant', 'Excited', 'Brave', 'B', 'Reluctant means unwilling or hesitant.'),
+(112, 3, 'VERBAL', 'Choose the word that is most nearly opposite in meaning to "Expand."', 'Increase', 'Extend', 'Contract', 'Develop', 'C', 'Contract means to become smaller, the opposite of expand.'),
+(113, 3, 'VERBAL', 'Choose the correctly spelled word.', 'Embarrasment', 'Embarrassment', 'Embarassment', 'Embarresment', 'B', 'Embarrassment is the correct spelling.'),
+(114, 3, 'VERBAL', 'Fill in the blank: If I _____ earlier, I would have caught the train.', 'leave', 'had left', 'left', 'have left', 'B', 'The third conditional uses had + past participle.'),
+(115, 3, 'VERBAL', 'Choose the correct meaning of the idiom "Once in a blue moon."', 'Every month', 'Very rarely', 'Every year', 'Frequently', 'B', 'The idiom means something that happens very rarely.');
+
+-- Next 5: Accenture (Company ID: 4)
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(116, 4, 'VERBAL', 'Choose the one-word substitution for "A person who cannot read or write."', 'Literate', 'Illiterate', 'Scholar', 'Orator', 'B', 'An illiterate person cannot read or write.'),
+(117, 4, 'VERBAL', 'Find the error in the sentence: "She don''t like coffee."', 'She', 'don''t', 'like', 'No Error', 'B', 'The correct verb is doesn''t because the subject is singular.'),
+(118, 4, 'VERBAL', 'Choose the correct passive voice of: "The teacher praised the student."', 'The student praised the teacher.', 'The student was praised by the teacher.', 'The teacher was praised.', 'The student has praised the teacher.', 'B', 'The object becomes the subject in passive voice.'),
+(119, 4, 'VERBAL', 'Choose the correct indirect speech: He said, "I am busy."', 'He said that he is busy.', 'He said that I was busy.', 'He said that he was busy.', 'He told he was busy.', 'C', 'Present tense changes to past tense in reported speech.'),
+(120, 4, 'VERBAL', 'Choose the word that best completes the sentence: The scientist made an _____ discovery.', 'important', 'impossible', 'accidental', 'astonishing', 'D', 'Astonishing discovery is the most appropriate collocation.');
+
+-- Next 5: Capgemini (Company ID: 5)
+INSERT IGNORE INTO aptitude_questions (id, company_id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation) VALUES
+(121, 5, 'VERBAL', 'Choose the synonym of "Brief."', 'Long', 'Short', 'Large', 'Slow', 'B', 'Brief means short in duration or length.'),
+(122, 5, 'VERBAL', 'Choose the antonym of "Generous."', 'Kind', 'Helpful', 'Selfish', 'Honest', 'C', 'Selfish is the opposite of generous.'),
+(123, 5, 'VERBAL', 'Fill in the blank: The meeting has been postponed _____ next Monday.', 'to', 'for', 'at', 'by', 'A', 'Meetings are commonly postponed to a future date.'),
+(124, 5, 'VERBAL', 'Choose the correct meaning of the idiom "Burn the midnight oil."', 'Waste electricity', 'Work or study late into the night', 'Sleep peacefully', 'Cook dinner', 'B', 'The idiom means working or studying late at night.'),
+(125, 5, 'VERBAL', 'Choose the one-word substitution for "A speech delivered without preparation."', 'Lecture', 'Debate', 'Extempore', 'Monologue', 'C', 'An extempore speech is delivered without prior preparation.');
 
 
 -- 6. Insert Coding Questions

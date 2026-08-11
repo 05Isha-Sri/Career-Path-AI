@@ -446,8 +446,16 @@
                             <option value="OOP">Object-Oriented Programming (OOP)</option>
                             <option value="DBMS">Database Management System (DBMS)</option>
                             <option value="SQL">SQL Queries</option>
+                            <option value="DSA">Data Structures and Algorithm (DSA)</option>
                             <option value="Percentages">Percentages</option>
                             <option value="Time and Work">Time and Work</option>
+                            <option value="Time ,speed , distance">Time ,speed , distance</option>
+                            <option value="Profit and Loss">Profit and Loss</option>
+                            <option value="Simple Interest">Simple Interest</option>
+                            <option value="Ratio Proportion">Ratio Proportion</option>
+                            <option value="Calendar">Calendar</option>
+                            <option value="Clock">Clock</option>
+
                         </select>
                     </div>
 
@@ -533,6 +541,17 @@
                                             <option value="QUANTITATIVE">Quantitative Aptitude</option>
                                             <option value="LOGICAL">Logical Reasoning</option>
                                             <option value="VERBAL">Verbal Ability</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Company (Optional)</label>
+                                        <select id="admin-apt-company">
+                                            <option value="">-- Generic / All Companies --</option>
+                                            <option value="1">TCS</option>
+                                            <option value="2">Infosys</option>
+                                            <option value="3">Cognizant</option>
+                                            <option value="4">Accenture</option>
+                                            <option value="5">Capgemini</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -666,25 +685,64 @@
                 Difficulty: <span id="modal-diff" class="badge">BEGINNER</span>
             </div>
             
-            <h3>Problem Statement</h3>
-            <p id="modal-statement">Problem statement details go here...</p>
+            <div class="coding-workspace">
+                <!-- Left Pane: Problem statement and solution code (hidden by default) -->
+                <div class="workspace-left">
+                    <h3>Problem Statement</h3>
+                    <p id="modal-statement">Problem statement details go here...</p>
 
-            <div class="sample-io-container">
-                <div class="io-box">
-                    <strong>Sample Input:</strong>
-                    <pre id="modal-input">None</pre>
+                    <div class="sample-io-container">
+                        <div class="io-box">
+                            <strong>Sample Input:</strong>
+                            <pre id="modal-input">None</pre>
+                        </div>
+                        <div class="io-box">
+                            <strong>Sample Output:</strong>
+                            <pre id="modal-output">None</pre>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Reference Solution button -->
+                    <button class="btn btn-secondary btn-sm" id="btn-toggle-solution" onclick="toggleSolutionDisplay()" style="margin: 10px 0; align-self: flex-start;">
+                        👁️ Show Model Solution
+                    </button>
+                    
+                    <div id="solution-wrapper" class="hidden">
+                        <h3>Java Reference Solution</h3>
+                        <pre class="code-block"><code id="modal-solution">public class Solution {}</code></pre>
+
+                        <h3>Explanation</h3>
+                        <p id="modal-explanation">Explanation goes here...</p>
+                    </div>
                 </div>
-                <div class="io-box">
-                    <strong>Sample Output:</strong>
-                    <pre id="modal-output">None</pre>
+
+                <!-- Right Pane: Textarea notepad code editor and AI chat panel -->
+                <div class="workspace-right">
+                    <h3>Your Notepad Code Editor</h3>
+                    <p class="small text-muted" style="margin-top: -10px; margin-bottom: 5px; font-size: 11px;">Type your Java code here (no compilation, ask AI to check correctness!):</p>
+                    <textarea id="modal-editor" class="code-editor-area" placeholder="public class Solution {&#10;    // Type your Java code here...&#10;}"></textarea>
+
+                    <div class="ai-bot-container">
+                        <button class="btn btn-primary" id="btn-ask-ai" onclick="askAiAssistant()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            🤖 Ask AI Tutor to Review Code
+                        </button>
+                        
+                        <!-- AI Chat Panel (Hidden by default) -->
+                        <div id="ai-chat-panel" class="ai-chat-panel hidden">
+                            <div class="chat-header">
+                                💬 AI Placement Assistant
+                            </div>
+                            <div class="chat-messages" id="ai-chat-messages">
+                                <!-- Loaded dynamically -->
+                            </div>
+                            <div class="chat-input-area">
+                                <input type="text" id="ai-chat-input" placeholder="Ask AI a follow-up question..." onkeydown="if(event.key==='Enter') sendAiChatMessage()">
+                                <button class="btn btn-primary btn-sm" onclick="sendAiChatMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <h3>Java Solution Code</h3>
-            <pre class="code-block"><code id="modal-solution">public class Solution {}</code></pre>
-
-            <h3>Explanation</h3>
-            <p id="modal-explanation">Explanation goes here...</p>
         </div>
         <div class="modal-footer">
             <label class="completion-checkbox">

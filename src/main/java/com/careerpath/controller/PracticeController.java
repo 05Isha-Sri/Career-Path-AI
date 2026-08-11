@@ -36,26 +36,52 @@ public class PracticeController {
     // ===================================================================
 
     /**
-     * Fetch aptitude questions, optionally filtered by category.
+     * Fetch aptitude questions, filtered by the student's selected company and category.
+     * If the company has no specific questions, it falls back to generic questions.
      */
     @GetMapping("/aptitude/questions")
     public ResponseEntity<List<AptitudeQuestion>> getAptitudeQuestions(
-            @RequestParam(required = false) String category) {
+            @RequestParam(required = false) String category, HttpSession session) {
         
-        if (category != null && !category.trim().isEmpty()) {
-            return ResponseEntity.ok(aptitudeQuestionRepository.findByCategory(category.toUpperCase()));
+        com.careerpath.entity.User loggedUser = (com.careerpath.entity.User) session.getAttribute("user");
+        List<AptitudeQuestion> questions;
+
+        // If user has selected a company, fetch ONLY that company's questions (no leak, no fallback)
+        if (loggedUser != null && loggedUser.getSelectedCompanyId() != null) {
+            Long companyId = loggedUser.getSelectedCompanyId();
+            if (category != null && !category.trim().isEmpty()) {
+                questions = aptitudeQuestionRepository.findByCompanyIdAndCategory(companyId, category.toUpperCase());
+            } else {
+                questions = aptitudeQuestionRepository.findByCompanyId(companyId);
+            }
+        } else {
+            // If no company is selected, load generic questions (where company_id is NULL)
+            if (category != null && !category.trim().isEmpty()) {
+                questions = aptitudeQuestionRepository.findByCompanyIdIsNullAndCategory(category.toUpperCase());
+            } else {
+                questions = aptitudeQuestionRepository.findByCompanyIdIsNull();
+            }
         }
-        return ResponseEntity.ok(aptitudeQuestionRepository.findAll());
+
+        return ResponseEntity.ok(questions);
     }
 
     /**
      * Generate a Mock Test.
-     * Fetches 20 random questions from the database (or all questions if database has less than 20).
+     * Fetches 10 random questions matching the user's selected company (with fallback to generic).
      */
     @GetMapping("/aptitude/mock")
-    public ResponseEntity<List<AptitudeQuestion>> getMockTestQuestions() {
-        // Fetch up to 20 random questions using our native query
-        List<AptitudeQuestion> questions = aptitudeQuestionRepository.findRandomQuestions(20);
+    public ResponseEntity<List<AptitudeQuestion>> getMockTestQuestions(HttpSession session) {
+        com.careerpath.entity.User loggedUser = (com.careerpath.entity.User) session.getAttribute("user");
+        List<AptitudeQuestion> questions;
+
+        if (loggedUser != null && loggedUser.getSelectedCompanyId() != null) {
+            // Fetch 10 random questions matching selected company or generic
+            questions = aptitudeQuestionRepository.findRandomQuestionsByCompany(loggedUser.getSelectedCompanyId(), 10);
+        } else {
+            // Fetch 10 general random questions
+            questions = aptitudeQuestionRepository.findRandomQuestions(10);
+        }
         return ResponseEntity.ok(questions);
     }
 

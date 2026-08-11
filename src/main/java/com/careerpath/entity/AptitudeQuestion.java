@@ -14,6 +14,9 @@ public class AptitudeQuestion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(nullable = false)
     private String category; // 'QUANTITATIVE', 'LOGICAL', 'VERBAL'
 
@@ -44,6 +47,19 @@ public class AptitudeQuestion {
 
     public AptitudeQuestion(String category, String questionText, String optionA, String optionB, 
                             String optionC, String optionD, String correctOption, String explanation) {
+        this.category = category;
+        this.questionText = questionText;
+        this.optionA = optionA;
+        this.optionB = optionB;
+        this.optionC = optionC;
+        this.optionD = optionD;
+        this.correctOption = correctOption;
+        this.explanation = explanation;
+    }
+
+    public AptitudeQuestion(Long companyId, String category, String questionText, String optionA, String optionB, 
+                            String optionC, String optionD, String correctOption, String explanation) {
+        this.companyId = companyId;
         this.category = category;
         this.questionText = questionText;
         this.optionA = optionA;
@@ -128,5 +144,13 @@ public class AptitudeQuestion {
 
     public void setExplanation(String explanation) {
         this.explanation = explanation;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 }

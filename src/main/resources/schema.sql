@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Multiple Choice Questions for Practice and Mock Tests.
 CREATE TABLE IF NOT EXISTS aptitude_questions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id BIGINT,
     category VARCHAR(50) NOT NULL, -- 'QUANTITATIVE', 'LOGICAL', 'VERBAL'
     question_text TEXT NOT NULL,
     option_a VARCHAR(255) NOT NULL,
@@ -56,7 +57,8 @@ CREATE TABLE IF NOT EXISTS aptitude_questions (
     option_c VARCHAR(255) NOT NULL,
     option_d VARCHAR(255) NOT NULL,
     correct_option VARCHAR(1) NOT NULL, -- 'A', 'B', 'C', 'D'
-    explanation TEXT
+    explanation TEXT,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Table 6: Coding Questions

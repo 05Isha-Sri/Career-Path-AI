@@ -1,0 +1,30 @@
+Q: A train travels 120 km in 2 hours. Find its speed in km/h.
+A: 40
+B: 50
+C: 60
+D: 70
+Correct: C
+Explanation: Speed = Distance / Time = 120 km / 2 hours = 60 km/h.
+Company: 1
+Category: QUANTITATIVE
+---
+Q: Look at the series: 2, 4, 8, 16, 32, ... What number should come next?
+A: 48
+B: 56
+C: 64
+D: 72
+Correct: C
+Explanation: Each number is multiplied by 2 to get the next number: 32 * 2 = 64.
+Company: 2
+Category: LOGICAL
+---
+Q: Choose the correct synonym for "ABANDON":
+A: Keep
+B: Forsake
+C: Adopt
+D: Cherish
+Correct: B
+Explanation: "Abandon" means to leave or desert. "Forsake" shares the same meaning.
+Company: 4
+Category: VERBAL
+---

@@ -982,6 +982,20 @@ function openCodingModal(id) {
         question.difficulty === "INTERMEDIATE" ? "badge-warning" : "badge-danger"
     );
 
+    // Reset solution view to hidden
+    document.getElementById("solution-wrapper").classList.add("hidden");
+    document.getElementById("btn-toggle-solution").textContent = "👁️ Show Model Solution";
+
+    // Clear and reset notepad code editor
+    document.getElementById("modal-editor").value = `public class Solution {\n    // Write your code here to solve: ${question.title}\n    \n}`;
+
+    // Clear and hide AI chatbot panel
+    document.getElementById("ai-chat-panel").classList.add("hidden");
+    document.getElementById("ai-chat-messages").innerHTML = "";
+    document.getElementById("ai-chat-input").value = "";
+    document.getElementById("btn-ask-ai").disabled = false;
+    document.getElementById("btn-ask-ai").textContent = "🤖 Ask AI Tutor to Review Code";
+
     // Set completed status checkbox in modal footer
     const isCompleted = isItemCompleted("CODING", question.id);
     document.getElementById("modal-complete-check").checked = isCompleted;
@@ -996,6 +1010,151 @@ function openCodingModal(id) {
 function closeCodingModal() {
     document.getElementById("coding-modal").close();
     activeCodingQuestion = null;
+}
+
+/**
+ * Toggles the reference model solution panel visibility.
+ */
+function toggleSolutionDisplay() {
+    const solutionWrapper = document.getElementById("solution-wrapper");
+    const toggleBtn = document.getElementById("btn-toggle-solution");
+    
+    if (solutionWrapper.classList.contains("hidden")) {
+        solutionWrapper.classList.remove("hidden");
+        toggleBtn.textContent = "👁️ Hide Model Solution";
+    } else {
+        solutionWrapper.classList.add("hidden");
+        toggleBtn.textContent = "👁️ Show Model Solution";
+    }
+}
+
+/**
+ * Sends code to the backend AI controller for review.
+ */
+function askAiAssistant() {
+    if (!activeCodingQuestion) return;
+
+    const studentCode = document.getElementById("modal-editor").value;
+    if (!studentCode.trim()) {
+        showToast("Please write some code in the notepad editor before asking the AI bot for help.", "error");
+        return;
+    }
+
+    const askBtn = document.getElementById("btn-ask-ai");
+    const chatPanel = document.getElementById("ai-chat-panel");
+    const chatMessages = document.getElementById("ai-chat-messages");
+
+    // Show chat panel and display loader
+    chatPanel.classList.remove("hidden");
+    chatMessages.innerHTML = `
+        <div class="chat-bubble ai">
+            <strong>🤖 AI Tutor:</strong> Analyzing your code logic and checking for bugs... Please wait! 🔄
+        </div>
+    `;
+
+    askBtn.disabled = true;
+    askBtn.textContent = "🤖 AI is reviewing...";
+
+    fetch("/api/ai/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            problemTitle: activeCodingQuestion.title,
+            studentCode: studentCode
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        chatMessages.innerHTML = `
+            <div class="chat-bubble ai">
+                <strong>🤖 AI Tutor:</strong><br>${formatMarkdown(data.response)}
+            </div>
+        `;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+    .catch(err => {
+        chatMessages.innerHTML = `
+            <div class="chat-bubble ai text-danger">
+                <strong>❌ Error:</strong> Failed to connect to AI tutor. Details: ${err.message}
+            </div>
+        `;
+    })
+    .finally(() => {
+        askBtn.disabled = false;
+        askBtn.textContent = "🤖 Re-Review Code";
+    });
+}
+
+/**
+ * Sends a follow-up question message to the AI chatbot.
+ */
+function sendAiChatMessage() {
+    if (!activeCodingQuestion) return;
+
+    const input = document.getElementById("ai-chat-input");
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
+
+    const studentCode = document.getElementById("modal-editor").value;
+    const chatMessages = document.getElementById("ai-chat-messages");
+
+    // Append user message bubble
+    const userBubble = document.createElement("div");
+    userBubble.className = "chat-bubble user";
+    userBubble.innerHTML = `<strong>You:</strong><br>${userMessage}`;
+    chatMessages.appendChild(userBubble);
+    
+    input.value = "";
+    
+    // Append loading bubble
+    const typingBubble = document.createElement("div");
+    typingBubble.className = "chat-bubble ai";
+    typingBubble.id = "ai-typing-bubble";
+    typingBubble.innerHTML = `<strong>🤖 AI Tutor:</strong> Thinking... 💭`;
+    chatMessages.appendChild(typingBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    fetch("/api/ai/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            problemTitle: activeCodingQuestion.title,
+            studentCode: studentCode,
+            userMessage: userMessage
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const typing = document.getElementById("ai-typing-bubble");
+        if (typing) typing.remove();
+
+        const aiBubble = document.createElement("div");
+        aiBubble.className = "chat-bubble ai";
+        aiBubble.innerHTML = `<strong>🤖 AI Tutor:</strong><br>${formatMarkdown(data.response)}`;
+        chatMessages.appendChild(aiBubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+    .catch(err => {
+        const typing = document.getElementById("ai-typing-bubble");
+        if (typing) typing.remove();
+
+        const errBubble = document.createElement("div");
+        errBubble.className = "chat-bubble ai text-danger";
+        errBubble.innerHTML = `<strong>❌ Error:</strong> Failed to get response: ${err.message}`;
+        chatMessages.appendChild(errBubble);
+    });
+}
+
+/**
+ * Basic formatter to replace markdown text inside chatbot messages.
+ */
+function formatMarkdown(text) {
+    if (!text) return "";
+    let formatted = text
+        .replace(/\n/g, "<br>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>");
+    return formatted;
 }
 
 /**
@@ -1173,6 +1332,8 @@ function handleAdminAddAptitude(event) {
     event.preventDefault();
 
     const category = document.getElementById("admin-apt-cat").value;
+    const companyIdVal = document.getElementById("admin-apt-company").value;
+    const companyId = companyIdVal ? parseInt(companyIdVal) : null;
     const questionText = document.getElementById("admin-apt-text").value;
     const optionA = document.getElementById("admin-apt-a").value;
     const optionB = document.getElementById("admin-apt-b").value;
@@ -1182,7 +1343,7 @@ function handleAdminAddAptitude(event) {
     const explanation = document.getElementById("admin-apt-exp").value;
 
     const newQuestion = {
-        category, questionText, optionA, optionB, optionC, optionD, correctOption, explanation
+        companyId, category, questionText, optionA, optionB, optionC, optionD, correctOption, explanation
     };
 
     fetch("/api/admin/aptitude", {
@@ -1203,6 +1364,7 @@ function handleAdminAddAptitude(event) {
         document.getElementById("admin-apt-c").value = "";
         document.getElementById("admin-apt-d").value = "";
         document.getElementById("admin-apt-exp").value = "";
+        document.getElementById("admin-apt-company").value = "";
         loadAdminConsole();
     })
     .catch(err => showToast(err.message, "error"));
