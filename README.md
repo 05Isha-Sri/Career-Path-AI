@@ -10,4 +10,4 @@ REST API backend
 MySQL database integration
 Tech Stack
 
-Java | Spring Boot | MySQL | HTML | CSS | JavaScript
+Java | Spring Boot | REST API | MySQL | HTML | CSS | JavaScript
