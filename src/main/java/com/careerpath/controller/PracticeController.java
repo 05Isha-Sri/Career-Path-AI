@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * Controller handling Practice Questions, Mock Tests, and Coding Questions.
- */
+
+import com.careerpath.repository.UserRepository;
+
 @RestController
 @RequestMapping("/api")
 public class PracticeController {
@@ -31,31 +31,37 @@ public class PracticeController {
     @Autowired
     private TestResultRepository testResultRepository;
 
-    // ===================================================================
-    // Aptitude Practice Methods
-    // ===================================================================
+    @Autowired
+    private UserRepository userRepository;
 
-    /**
-     * Fetch aptitude questions, filtered by the student's selected company and category.
-     * If the company has no specific questions, it falls back to generic questions.
-     */
+    
     @GetMapping("/aptitude/questions")
     public ResponseEntity<List<AptitudeQuestion>> getAptitudeQuestions(
-            @RequestParam(required = false) String category, HttpSession session) {
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long companyId,
+            HttpSession session) {
         
         com.careerpath.entity.User loggedUser = (com.careerpath.entity.User) session.getAttribute("user");
+        Long targetCompanyId = companyId;
+
+        if (targetCompanyId == null && loggedUser != null) {
+            Optional<User> freshUser = userRepository.findById(loggedUser.getId());
+            if (freshUser.isPresent()) {
+                targetCompanyId = freshUser.get().getSelectedCompanyId();
+            } else {
+                targetCompanyId = loggedUser.getSelectedCompanyId();
+            }
+        }
+
         List<AptitudeQuestion> questions;
 
-        // If user has selected a company, fetch ONLY that company's questions (no leak, no fallback)
-        if (loggedUser != null && loggedUser.getSelectedCompanyId() != null) {
-            Long companyId = loggedUser.getSelectedCompanyId();
+        if (targetCompanyId != null) {
             if (category != null && !category.trim().isEmpty()) {
-                questions = aptitudeQuestionRepository.findByCompanyIdAndCategory(companyId, category.toUpperCase());
+                questions = aptitudeQuestionRepository.findByCompanyIdAndCategory(targetCompanyId, category.toUpperCase());
             } else {
-                questions = aptitudeQuestionRepository.findByCompanyId(companyId);
+                questions = aptitudeQuestionRepository.findByCompanyId(targetCompanyId);
             }
         } else {
-            // If no company is selected, load generic questions (where company_id is NULL)
             if (category != null && !category.trim().isEmpty()) {
                 questions = aptitudeQuestionRepository.findByCompanyIdIsNullAndCategory(category.toUpperCase());
             } else {
@@ -66,32 +72,49 @@ public class PracticeController {
         return ResponseEntity.ok(questions);
     }
 
-    /**
-     * Generate a Mock Test.
-     * Fetches 10 random questions matching the user's selected company (with fallback to generic).
-     */
+    
     @GetMapping("/aptitude/mock")
-    public ResponseEntity<List<AptitudeQuestion>> getMockTestQuestions(HttpSession session) {
+    public ResponseEntity<List<AptitudeQuestion>> getMockTestQuestions(
+            @RequestParam(required = false) Long companyId,
+            HttpSession session) {
         com.careerpath.entity.User loggedUser = (com.careerpath.entity.User) session.getAttribute("user");
+        Long targetCompanyId = companyId;
+
+        if (targetCompanyId == null && loggedUser != null) {
+            Optional<User> freshUser = userRepository.findById(loggedUser.getId());
+            if (freshUser.isPresent()) {
+                targetCompanyId = freshUser.get().getSelectedCompanyId();
+            } else {
+                targetCompanyId = loggedUser.getSelectedCompanyId();
+            }
+        }
+
         List<AptitudeQuestion> questions;
 
-        if (loggedUser != null && loggedUser.getSelectedCompanyId() != null) {
-            // Fetch 10 random questions matching selected company or generic
-            questions = aptitudeQuestionRepository.findRandomQuestionsByCompany(loggedUser.getSelectedCompanyId(), 10);
+        if (targetCompanyId != null) {
+            // Strictly fetch practice questions belonging to the specific target company
+            List<AptitudeQuestion> companyQuestions = new ArrayList<>(aptitudeQuestionRepository.findByCompanyId(targetCompanyId));
+            
+            // Randomize question order every time a new mock assessment starts
+            Collections.shuffle(companyQuestions);
+
+            // Select 15 questions, or all available if fewer than 15
+            if (companyQuestions.size() > 15) {
+                questions = new ArrayList<>(companyQuestions.subList(0, 15));
+            } else {
+                questions = companyQuestions;
+            }
         } else {
-            // Fetch 10 general random questions
-            questions = aptitudeQuestionRepository.findRandomQuestions(10);
+            // Do NOT return common questions across all companies
+            questions = Collections.emptyList();
         }
         return ResponseEntity.ok(questions);
     }
 
-    /**
-     * Submit Mock Test answers and calculate score.
-     * Takes a Map of { "questionId": "selectedOption" } e.g., { "1": "C", "5": "A" }
-     */
+    
     @PostMapping("/aptitude/mock/submit")
     public ResponseEntity<?> submitMockTest(@RequestBody Map<String, String> answers, HttpSession session) {
-        // Verify if user is logged in
+        
         User loggedUser = (User) session.getAttribute("user");
         if (loggedUser == null) {
             Map<String, String> response = new HashMap<>();
@@ -102,47 +125,42 @@ public class PracticeController {
         int score = 0;
         int totalQuestions = answers.size();
 
-        // If the student submitted a test with no answers, return early
         if (totalQuestions == 0) {
             TestResult emptyResult = new TestResult(loggedUser.getId(), 0, 0, 0.0);
             TestResult savedResult = testResultRepository.save(emptyResult);
             return ResponseEntity.ok(savedResult);
         }
 
-        // Loop through all submitted answers and check correctness
         for (Map.Entry<String, String> entry : answers.entrySet()) {
             try {
                 Long questionId = Long.parseLong(entry.getKey());
                 String selectedOption = entry.getValue();
 
-                Optional<AptitudeQuestion> questionOpt = aptitudeQuestionRepository.findById(questionId);
-                if (questionOpt.isPresent()) {
-                    AptitudeQuestion question = questionOpt.get();
-                    // Compare correct option (case-insensitive)
-                    if (question.getCorrectOption().trim().equalsIgnoreCase(selectedOption.trim())) {
-                        score++;
+                if (selectedOption != null && !selectedOption.trim().isEmpty()) {
+                    Optional<AptitudeQuestion> questionOpt = aptitudeQuestionRepository.findById(questionId);
+                    if (questionOpt.isPresent()) {
+                        AptitudeQuestion question = questionOpt.get();
+                        
+                        if (question.getCorrectOption().trim().equalsIgnoreCase(selectedOption.trim())) {
+                            score++;
+                        }
                     }
                 }
             } catch (NumberFormatException e) {
-                // Ignore invalid keys
             }
         }
 
-        // Calculate score percentage
         double percentage = ((double) score / totalQuestions) * 100.0;
-        // Round to 2 decimal places
+        
         percentage = Math.round(percentage * 100.0) / 100.0;
 
-        // Save the test results in the MySQL database
         TestResult result = new TestResult(loggedUser.getId(), score, totalQuestions, percentage);
         TestResult savedResult = testResultRepository.save(result);
 
         return ResponseEntity.ok(savedResult);
     }
 
-    /**
-     * Retrieve the mock test result history for the logged-in student.
-     */
+    
     @GetMapping("/aptitude/results")
     public ResponseEntity<?> getTestResults(HttpSession session) {
         User loggedUser = (User) session.getAttribute("user");
@@ -156,13 +174,7 @@ public class PracticeController {
         return ResponseEntity.ok(results);
     }
 
-    // ===================================================================
-    // Coding Practice Methods
-    // ===================================================================
-
-    /**
-     * Retrieve all coding questions, optionally filtered by difficulty (BEGINNER, INTERMEDIATE, ADVANCED).
-     */
+    
     @GetMapping("/coding/questions")
     public ResponseEntity<List<CodingQuestion>> getCodingQuestions(
             @RequestParam(required = false) String difficulty) {
@@ -173,9 +185,7 @@ public class PracticeController {
         return ResponseEntity.ok(codingQuestionRepository.findAll());
     }
 
-    /**
-     * Fetch a specific coding question details.
-     */
+    
     @GetMapping("/coding/questions/{id}")
     public ResponseEntity<?> getCodingQuestionById(@PathVariable Long id) {
         Optional<CodingQuestion> questionOpt = codingQuestionRepository.findById(id);

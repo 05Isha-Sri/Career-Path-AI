@@ -2,10 +2,7 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing a coding practice problem.
- * Maps to the 'coding_questions' table.
- */
+
 @Entity
 @Table(name = "coding_questions")
 public class CodingQuestion {
@@ -18,7 +15,7 @@ public class CodingQuestion {
     private String title;
 
     @Column(nullable = false)
-    private String difficulty; // 'BEGINNER', 'INTERMEDIATE', 'ADVANCED'
+    private String difficulty; 
 
     @Column(name = "problem_statement", columnDefinition = "TEXT", nullable = false)
     private String problemStatement;
@@ -35,7 +32,7 @@ public class CodingQuestion {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    // Default No-Argument Constructor
+    
     public CodingQuestion() {
     }
 
@@ -50,9 +47,6 @@ public class CodingQuestion {
         this.explanation = explanation;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

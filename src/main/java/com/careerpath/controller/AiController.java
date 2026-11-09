@@ -17,16 +17,11 @@ import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.Map;
 
-/**
- * Controller to handle AI Chatbot interaction for reviewing coding practice questions.
- * Connects directly to the Google Gemini API (gemini-2.5-flash) using built-in Java HTTP clients.
- * Falls back to a smart local rule engine if no API Key is configured.
- */
+
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
 
-    // Read the Gemini API key from application.properties (optional)
     @Value("${gemini.api.key:}")
     private String apiKey;
 
@@ -35,7 +30,7 @@ public class AiController {
 
     @PostMapping("/review")
     public ResponseEntity<?> reviewCode(@RequestBody Map<String, Object> payload, HttpSession session) {
-        // Authenticated users only
+        
         if (session.getAttribute("user") == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "Sign in required."));
         }
@@ -48,10 +43,9 @@ public class AiController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("response", "Please write some code in the editor before asking the AI bot for help."));
         }
 
-        // Construct the prompt for the AI
         String prompt;
         if (userMessage == null || userMessage.trim().isEmpty()) {
-            // First time requesting a code check
+            
             prompt = "You are an expert Java technical interviewer checking student placement code. "
                     + "The student has written the following Java code for the problem: \"" + problemTitle + "\".\n"
                     + "Check if their code is correct or not. Point out syntax errors, compilation bugs, or logical errors. "
@@ -59,19 +53,16 @@ public class AiController {
                     + "Do NOT give the full solution immediately, encourage them to write it. Here is the student's code:\n\n"
                     + studentCode;
         } else {
-            // Follow-up chat message
             prompt = "Context: The student is working on the Java coding problem \"" + problemTitle + "\".\n"
                     + "Their current code is:\n" + studentCode + "\n\n"
                     + "The student asks: \"" + userMessage + "\"\n\n"
                     + "Respond briefly as an encouraging Java tutor. Answer their question directly based on their code.";
         }
 
-        // 1. If API Key is configured, make real HTTP POST request to Google Gemini API
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             try {
                 String geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
-                // Build Gemini API payload structure: { "contents": [ { "parts": [ { "text": "prompt" } ] } ] }
                 ObjectNode requestRoot = objectMapper.createObjectNode();
                 ArrayNode contents = requestRoot.putArray("contents");
                 ObjectNode contentObj = contents.addObject();
@@ -90,7 +81,6 @@ public class AiController {
 
                 if (response.statusCode() == 200) {
                     JsonNode responseRoot = objectMapper.readTree(response.body());
-                    // Extract text: responseRoot.candidates[0].content.parts[0].text
                     String aiResponse = responseRoot
                             .path("candidates").get(0)
                             .path("content")
@@ -107,70 +97,64 @@ public class AiController {
             }
         }
 
-        // 2. Failsafe Local Fallback: Generates detailed, smart feedback offline
         String mockResponse = generateSmartMockResponse(problemTitle, studentCode, userMessage);
         return ResponseEntity.ok(Collections.singletonMap("response", mockResponse));
     }
 
-    /**
-     * Generates a realistic mock AI tutor response offline, in case the user hasn't set up a Gemini API Key.
-     */
+    
     private String generateSmartMockResponse(String problemTitle, String studentCode, String userMessage) {
         boolean isFollowUp = (userMessage != null && !userMessage.trim().isEmpty());
 
         if (isFollowUp) {
-            return "👋 [Mock AI Chatbot Mode]\n"
+            return "[Mock AI Chatbot Mode]\n"
                     + "I analyzed your question: \"" + userMessage + "\". Since there's no Google Gemini API Key configured in your application.properties, "
                     + "I'm running in local tutoring mode!\n\n"
                     + "Make sure your code logic correctly addresses the inputs/outputs. For example, if you are working on loops, check the boundary conditions (e.g. index < length). "
                     + "Once you set a real `gemini.api.key` in your application properties, I will give you full AI insights!";
         }
 
-        // Basic offline validations for common tasks
         StringBuilder feedback = new StringBuilder();
-        feedback.append("🤖 **AI Code Reviewer (Local Mode)**\n");
+        feedback.append("**AI Code Reviewer (Local Mode)**\n");
         feedback.append("*(Note: To enable live AI intelligence, configure `gemini.api.key` in application.properties)*\n\n");
 
         boolean hasClass = studentCode.contains("class");
         boolean hasMethod = false;
         
-        // Simple heuristic checks based on the problem title
         if (problemTitle.toLowerCase().contains("reverse")) {
             hasMethod = studentCode.contains("reverse");
-            feedback.append("🔍 **Analysis for Reverse String:**\n");
+            feedback.append("**Analysis for Reverse String:**\n");
             if (studentCode.contains("StringBuilder") && studentCode.contains("reverse")) {
-                feedback.append("✅ Great job! You are using Java's built-in `StringBuilder.reverse()` method. This is the simplest way to solve this in an interview.\n");
+                feedback.append("• Great job! You are using Java's built-in `StringBuilder.reverse()` method. This is the simplest way to solve this in an interview.\n");
             } else if (studentCode.contains("charAt") || studentCode.contains("toCharArray")) {
-                feedback.append("✅ Excellent! You are reversing the string manually by swapping characters or iterating backwards. This shows a deep algorithmic understanding!\n");
+                feedback.append("• Excellent! You are reversing the string manually by swapping characters or iterating backwards. This shows a deep algorithmic understanding!\n");
             } else {
-                feedback.append("⚠️ Suggestion: Try using a `StringBuilder` to reverse the string, or convert it to a character array and loop backwards from `length() - 1` down to 0.\n");
+                feedback.append("• Suggestion: Try using a `StringBuilder` to reverse the string, or convert it to a character array and loop backwards from `length() - 1` down to 0.\n");
             }
         } 
         else if (problemTitle.toLowerCase().contains("palindrome")) {
             hasMethod = studentCode.contains("isPalindrome");
-            feedback.append("🔍 **Analysis for Palindrome Check:**\n");
+            feedback.append("**Analysis for Palindrome Check:**\n");
             if (studentCode.contains("charAt") && (studentCode.contains("while") || studentCode.contains("for"))) {
-                feedback.append("✅ Correct approach! Using two pointers (left and right) and comparing characters is the most optimal (O(N) time, O(1) space) solution.\n");
+                feedback.append("• Correct approach! Using two pointers (left and right) and comparing characters is the most optimal (O(N) time, O(1) space) solution.\n");
             } else {
-                feedback.append("⚠️ Tip: Keep it simple. Use two indices starting from both ends of the string. Move them inwards comparing `charAt(left) == charAt(right)`. If any character mismatches, return `false`.\n");
+                feedback.append("• Tip: Keep it simple. Use two indices starting from both ends of the string. Move them inwards comparing `charAt(left) == charAt(right)`. If any character mismatches, return `false`.\n");
             }
         }
         else {
-            feedback.append("🔍 **General Java Review:**\n");
+            feedback.append("**General Java Review:**\n");
             if (studentCode.contains("for") || studentCode.contains("while")) {
-                feedback.append("✅ Good use of loops to process your data structure.\n");
+                feedback.append("• Good use of loops to process your data structure.\n");
             } else {
-                feedback.append("💡 Note: Ensure your method has the correct return type and processes the inputs properly.\n");
+                feedback.append("• Note: Ensure your method has the correct return type and processes the inputs properly.\n");
             }
         }
 
-        // Check brackets match
         long openBraces = studentCode.chars().filter(ch -> ch == '{').count();
         long closeBraces = studentCode.chars().filter(ch -> ch == '}').count();
         if (openBraces != closeBraces) {
-            feedback.append("\n❌ **Syntax Check**: You have mismatched curly brackets! (Found " + openBraces + " `{` and " + closeBraces + " `}`). Please fix your braces.");
+            feedback.append("\n**Syntax Check**: You have mismatched curly brackets! (Found " + openBraces + " `{` and " + closeBraces + " `}`). Please fix your braces.");
         } else {
-            feedback.append("\n✅ **Brace Match**: All opening and closing curly braces match perfectly.");
+            feedback.append("\n**Brace Match**: All opening and closing curly braces match perfectly.");
         }
 
         return feedback.toString();

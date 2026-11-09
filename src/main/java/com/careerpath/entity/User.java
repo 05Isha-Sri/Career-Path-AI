@@ -2,15 +2,11 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing a User (Student or Admin) in the database.
- * Map to the 'users' table.
- */
+
 @Entity
 @Table(name = "users")
 public class User {
 
-    // Primary Key of the table, auto-incremented by the database
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,18 +21,14 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String role; // 'STUDENT' or 'ADMIN'
+    private String role; 
 
-    // We store company ID directly as a Long instead of @ManyToOne
-    // to keep the code simple, database-independent, and easy to explain.
     @Column(name = "selected_company_id")
     private Long selectedCompanyId;
 
-    // Default No-Argument Constructor (Required by JPA/Hibernate)
     public User() {
     }
 
-    // Constructor with fields (except ID since it's auto-generated)
     public User(String username, String password, String email, String role) {
         this.username = username;
         this.password = password;
@@ -44,9 +36,6 @@ public class User {
         this.role = role;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods (Standard Java Beans pattern)
-    // ===================================================================
 
     public Long getId() {
         return id;

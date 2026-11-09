@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * Controller containing administrator functions to manage companies, roadmaps, questions, and resources.
- * Only accessible to logged-in users with the 'ADMIN' role.
- */
+
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -42,17 +39,13 @@ public class AdminController {
     @Autowired
     private TestResultRepository testResultRepository;
 
-    /**
-     * Helper method to verify if the current user session is authorized as ADMIN.
-     */
+    
     private boolean isAdmin(HttpSession session) {
         User user = (User) session.getAttribute("user");
         return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
     }
 
-    /**
-     * Admin: Add a new company.
-     */
+    
     @PostMapping("/companies")
     public ResponseEntity<?> addCompany(@RequestBody Company company, HttpSession session) {
         if (!isAdmin(session)) {
@@ -66,9 +59,7 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: Add a preparation topic associated with a company.
-     */
+    
     @PostMapping("/company-topics")
     public ResponseEntity<?> addCompanyTopic(@RequestBody CompanyTopic topic, HttpSession session) {
         if (!isAdmin(session)) {
@@ -78,7 +69,6 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", "companyId, topicName, and category are required."));
         }
 
-        // Validate if company exists
         if (!companyRepository.existsById(topic.getCompanyId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", "Company does not exist."));
         }
@@ -87,9 +77,6 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: Add a weekly roadmap item.
-     */
     @PostMapping("/roadmaps")
     public ResponseEntity<?> addRoadmapItem(@RequestBody Roadmap roadmap, HttpSession session) {
         if (!isAdmin(session)) {
@@ -99,7 +86,6 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", "companyId, weekNumber, and topicName are required."));
         }
 
-        // Validate if company exists
         if (!companyRepository.existsById(roadmap.getCompanyId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", "Company does not exist."));
         }
@@ -108,9 +94,7 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: Add a new multiple-choice aptitude question.
-     */
+    
     @PostMapping("/aptitude")
     public ResponseEntity<?> addAptitudeQuestion(@RequestBody AptitudeQuestion question, HttpSession session) {
         if (!isAdmin(session)) {
@@ -124,9 +108,7 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: Add a new coding question.
-     */
+    
     @PostMapping("/coding")
     public ResponseEntity<?> addCodingQuestion(@RequestBody CodingQuestion question, HttpSession session) {
         if (!isAdmin(session)) {
@@ -140,9 +122,7 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: Add a new recommended study resource.
-     */
+    
     @PostMapping("/resources")
     public ResponseEntity<?> addResource(@RequestBody Resource resource, HttpSession session) {
         if (!isAdmin(session)) {
@@ -156,16 +136,14 @@ public class AdminController {
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * Admin: View student list and system-wide statistics (student counts, tests completed).
-     */
+    
     @GetMapping("/stats")
     public ResponseEntity<?> getAdminStats(HttpSession session) {
         if (!isAdmin(session)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access Denied. Admin role required."));
         }
 
-        // Fetch all users in the system
+        
         List<User> allUsers = userRepository.findAll();
         List<Map<String, Object>> studentList = new ArrayList<>();
 
@@ -177,17 +155,17 @@ public class AdminController {
                 totalAdmins++;
             } else {
                 totalStudents++;
-                // Let's count how many tests this specific student completed
+                
                 List<TestResult> userTests = testResultRepository.findByUserIdOrderByCompletedAtDesc(u.getId());
                 
-                // Pack details
+                
                 Map<String, Object> uData = new HashMap<>();
                 uData.put("id", u.getId());
                 uData.put("username", u.getUsername());
                 uData.put("email", u.getEmail());
                 uData.put("testsCompleted", userTests.size());
                 
-                // Calculate student's average score if they have taken tests
+                
                 double avg = 0.0;
                 if (!userTests.isEmpty()) {
                     double sum = 0.0;

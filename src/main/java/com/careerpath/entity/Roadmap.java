@@ -2,10 +2,7 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing a structured weekly prep plan for a company.
- * Maps to the 'roadmaps' table.
- */
+
 @Entity
 @Table(name = "roadmaps")
 public class Roadmap {
@@ -26,7 +23,6 @@ public class Roadmap {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Default No-Argument Constructor
     public Roadmap() {
     }
 
@@ -37,9 +33,6 @@ public class Roadmap {
         this.description = description;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

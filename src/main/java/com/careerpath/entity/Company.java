@@ -2,10 +2,7 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing a Company (TCS, Wipro, etc.).
- * Maps to the 'companies' table.
- */
+
 @Entity
 @Table(name = "companies")
 public class Company {
@@ -20,7 +17,6 @@ public class Company {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Default No-Argument Constructor (Required by JPA)
     public Company() {
     }
 
@@ -29,9 +25,6 @@ public class Company {
         this.description = description;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

@@ -2,10 +2,7 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing an Aptitude MCQ.
- * Maps to the 'aptitude_questions' table.
- */
+
 @Entity
 @Table(name = "aptitude_questions")
 public class AptitudeQuestion {
@@ -18,7 +15,7 @@ public class AptitudeQuestion {
     private Long companyId;
 
     @Column(nullable = false)
-    private String category; // 'QUANTITATIVE', 'LOGICAL', 'VERBAL'
+    private String category; 
 
     @Column(name = "question_text", columnDefinition = "TEXT", nullable = false)
     private String questionText;
@@ -36,12 +33,12 @@ public class AptitudeQuestion {
     private String optionD;
 
     @Column(name = "correct_option", nullable = false)
-    private String correctOption; // 'A', 'B', 'C', 'D'
+    private String correctOption; 
 
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    // Default No-Argument Constructor
+    
     public AptitudeQuestion() {
     }
 
@@ -70,9 +67,6 @@ public class AptitudeQuestion {
         this.explanation = explanation;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

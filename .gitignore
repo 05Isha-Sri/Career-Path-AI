@@ -12,3 +12,12 @@
 .classpath
 .settings/
 *.log
+
+# Python virtual environment
+.venv/
+venv/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example

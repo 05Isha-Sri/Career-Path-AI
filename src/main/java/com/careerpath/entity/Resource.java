@@ -2,10 +2,7 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing recommended study resources.
- * Maps to the 'resources' table.
- */
+
 @Entity
 @Table(name = "resources")
 public class Resource {
@@ -15,18 +12,17 @@ public class Resource {
     private Long id;
 
     @Column(name = "topic_name", nullable = false)
-    private String topicName; // e.g. 'OOP', 'DBMS'
+    private String topicName; 
 
     @Column(nullable = false)
     private String title;
 
     @Column(name = "resource_type", nullable = false)
-    private String resourceType; // 'NOTES', 'VIDEO', 'QUESTIONS'
+    private String resourceType; 
 
     @Column(nullable = false)
     private String url;
 
-    // Default No-Argument Constructor
     public Resource() {
     }
 
@@ -37,9 +33,6 @@ public class Resource {
         this.url = url;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

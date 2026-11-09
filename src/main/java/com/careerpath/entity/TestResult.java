@@ -3,10 +3,7 @@ package com.careerpath.entity;
 import jakarta.persistence.*;
 import java.util.Date;
 
-/**
- * Entity class representing a student's mock test results.
- * Maps to the 'test_results' table.
- */
+
 @Entity
 @Table(name = "test_results")
 public class TestResult {
@@ -31,9 +28,9 @@ public class TestResult {
     @Temporal(TemporalType.TIMESTAMP)
     private Date completedAt;
 
-    // Default No-Argument Constructor
+    
     public TestResult() {
-        this.completedAt = new Date(); // default to current date
+        this.completedAt = new Date(); 
     }
 
     public TestResult(Long userId, Integer score, Integer totalQuestions, Double percentage) {
@@ -44,9 +41,6 @@ public class TestResult {
         this.completedAt = new Date();
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

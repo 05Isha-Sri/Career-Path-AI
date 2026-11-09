@@ -2,11 +2,6 @@ package com.careerpath.entity;
 
 import jakarta.persistence.*;
 
-/**
- * Entity class representing a preparation topic (e.g. OOP, SQL, Percentages)
- * required for a specific company.
- * Maps to the 'company_topics' table.
- */
 @Entity
 @Table(name = "company_topics")
 public class CompanyTopic {
@@ -19,12 +14,12 @@ public class CompanyTopic {
     private Long companyId;
 
     @Column(nullable = false)
-    private String category; // 'APTITUDE', 'CODING', 'INTERVIEW'
+    private String category; 
 
     @Column(name = "topic_name", nullable = false)
     private String topicName;
 
-    // Default No-Argument Constructor
+    
     public CompanyTopic() {
     }
 
@@ -34,9 +29,6 @@ public class CompanyTopic {
         this.topicName = topicName;
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

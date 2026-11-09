@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Link to the Vanilla CSS Stylesheet -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=infosys-roadmap-1">
 </head>
 <body>
 
@@ -37,14 +37,17 @@
             <!-- Login Form -->
             <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" placeholder="Enter your username" required>
+                    <label for="login-username">Username or Email Address</label>
+                    <input type="text" id="login-username" placeholder="Enter your username or email" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
                     <input type="password" id="login-password" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Log In</button>
+                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                    Default accounts: <strong>student</strong> / <strong>student</strong> &nbsp;|&nbsp; <strong>admin</strong> / <strong>admin</strong>
+                </div>
             </form>
 
             <!-- Register Form (Hidden by default) -->
@@ -80,35 +83,35 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <span class="logo-icon">🚀</span>
+                <i data-lucide="rocket" class="logo-icon"></i>
                 <h2>CareerPath AI</h2>
             </div>
             
             <!-- Navigation items -->
             <nav class="sidebar-nav">
                 <button class="nav-item active" data-target="dashboard-view" onclick="switchView('dashboard-view')">
-                    <span class="nav-icon">📊</span> Dashboard
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
                 </button>
                 <button class="nav-item" data-target="companies-view" onclick="switchView('companies-view')">
-                    <span class="nav-icon">🏢</span> Companies
+                    <i data-lucide="building-2" class="nav-icon"></i> Companies
                 </button>
                 <button class="nav-item" data-target="roadmap-view" onclick="switchView('roadmap-view')">
-                    <span class="nav-icon">🗺️</span> Roadmap
+                    <i data-lucide="map" class="nav-icon"></i> Roadmap
                 </button>
                 <button class="nav-item" data-target="aptitude-view" onclick="switchView('aptitude-view')">
-                    <span class="nav-icon">🧠</span> Aptitude Practice
+                    <i data-lucide="brain" class="nav-icon"></i> Aptitude Practice
                 </button>
                 <button class="nav-item" data-target="mocktest-view" onclick="switchView('mocktest-view')">
-                    <span class="nav-icon">⏱️</span> Mock Assessment
+                    <i data-lucide="timer" class="nav-icon"></i> Mock Assessment
                 </button>
                 <button class="nav-item" data-target="coding-view" onclick="switchView('coding-view')">
-                    <span class="nav-icon">💻</span> Coding Practice
+                    <i data-lucide="code-2" class="nav-icon"></i> Coding Practice
                 </button>
                 <button class="nav-item" data-target="resources-view" onclick="switchView('resources-view')">
-                    <span class="nav-icon">📚</span> Resources
+                    <i data-lucide="book-open" class="nav-icon"></i> Resources
                 </button>
                 <button id="admin-nav-btn" class="nav-item admin-only hidden" data-target="admin-view" onclick="switchView('admin-view')">
-                    <span class="nav-icon">⚙️</span> Admin Console
+                    <i data-lucide="shield-check" class="nav-icon"></i> Admin Console
                 </button>
             </nav>
 
@@ -119,7 +122,7 @@
                     <div id="role-display" class="user-role">Student</div>
                 </div>
                 <button class="logout-btn" onclick="handleLogout()" title="Logout">
-                    <span class="logout-icon">🚪</span>
+                    <i data-lucide="log-out" class="logout-icon"></i>
                 </button>
             </div>
         </aside>
@@ -141,7 +144,7 @@
                     <!-- Metric Cards Grid -->
                     <div class="metrics-grid">
                         <div class="metric-card">
-                            <div class="metric-icon green">🗺️</div>
+                            <div class="metric-icon green"><i data-lucide="map-pin"></i></div>
                             <div class="metric-info">
                                 <h3>Roadmap Completed</h3>
                                 <div id="stat-roadmap" class="metric-value">0%</div>
@@ -149,7 +152,7 @@
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon blue">⏱️</div>
+                            <div class="metric-icon blue"><i data-lucide="timer"></i></div>
                             <div class="metric-info">
                                 <h3>Mock Tests Taken</h3>
                                 <div id="stat-tests" class="metric-value">0</div>
@@ -157,7 +160,7 @@
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon purple">💻</div>
+                            <div class="metric-icon purple"><i data-lucide="code-2"></i></div>
                             <div class="metric-info">
                                 <h3>Coding Solved</h3>
                                 <div id="stat-coding" class="metric-value">0</div>
@@ -165,7 +168,7 @@
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon orange">🎯</div>
+                            <div class="metric-icon orange"><i data-lucide="target"></i></div>
                             <div class="metric-info">
                                 <h3>Average Score</h3>
                                 <div id="stat-score" class="metric-value">0%</div>
@@ -177,7 +180,7 @@
                     <!-- Welcome & Quickstart section -->
                     <div class="dashboard-sections">
                         <div class="dashboard-panel welcome-panel">
-                            <h2>Welcome, <span id="welcome-username">Student</span>! 👋</h2>
+                            <h2>Welcome, <span id="welcome-username">Student</span>!</h2>
                             <p>Get ready to clear your placement recruitment process. Follow these 4 simple steps to boost your readiness:</p>
                             <ul class="guide-steps">
                                 <li><strong>1. Select your target company</strong> in the <strong>Companies</strong> tab.</li>
@@ -228,19 +231,19 @@
                         
                         <div class="topics-container">
                             <div class="topic-column">
-                                <h3 class="topic-header text-blue">🧠 Aptitude Topics</h3>
+                                <h3 class="topic-header text-blue"><i data-lucide="brain"></i> Aptitude Topics</h3>
                                 <ul id="profile-aptitude-topics" class="topic-list">
                                     <!-- Loaded dynamically -->
                                 </ul>
                             </div>
                             <div class="topic-column">
-                                <h3 class="topic-header text-green">💻 Coding Topics</h3>
+                                <h3 class="topic-header text-green"><i data-lucide="code-2"></i> Coding Topics</h3>
                                 <ul id="profile-coding-topics" class="topic-list">
                                     <!-- Loaded dynamically -->
                                 </ul>
                             </div>
                             <div class="topic-column">
-                                <h3 class="topic-header text-purple">🤝 Interview Topics</h3>
+                                <h3 class="topic-header text-purple"><i data-lucide="users"></i> Interview Topics</h3>
                                 <ul id="profile-interview-topics" class="topic-list">
                                     <!-- Loaded dynamically -->
                                 </ul>
@@ -251,7 +254,7 @@
 
                 <!-- 3. ROADMAP VIEW -->
                 <section id="roadmap-view" class="view-panel hidden">
-                    <p class="section-desc">A structured 4-week timeline built specifically for your selected target company. Tick off topics as you study them to track your progress.</p>
+                    <p class="section-desc">A structured preparation timeline built specifically for your selected target company. Tick off topics and sections as you study them to track your progress.</p>
                     
                     <div id="roadmap-placeholder" class="alert alert-info text-center">
                         Please select a target company under the <strong>Companies</strong> page to view your custom roadmap.
@@ -268,9 +271,9 @@
                     
                     <!-- Category Selection -->
                     <div class="practice-categories">
-                        <button class="btn btn-outline active" onclick="loadAptitudePractice('QUANTITATIVE', this)">Quantitative Aptitude</button>
-                        <button class="btn btn-outline" onclick="loadAptitudePractice('LOGICAL', this)">Logical Reasoning</button>
-                        <button class="btn btn-outline" onclick="loadAptitudePractice('VERBAL', this)">Verbal Ability</button>
+                        <button class="btn btn-outline active" data-category="QUANTITATIVE" onclick="loadAptitudePractice('QUANTITATIVE', this)">Quantitative Aptitude</button>
+                        <button class="btn btn-outline" data-category="LOGICAL" onclick="loadAptitudePractice('LOGICAL', this)">Logical Reasoning</button>
+                        <button class="btn btn-outline" data-category="VERBAL" onclick="loadAptitudePractice('VERBAL', this)">Verbal Ability</button>
                     </div>
 
                     <!-- Question Container -->
@@ -325,14 +328,14 @@
                     <!-- Pre-test landing state -->
                     <div id="mock-start-panel" class="mock-start-card">
                         <h2>Aptitude Mock Assessment</h2>
-                        <p>Simulate a real-time placement assessment test. The test contains randomized quantitative, logical, and verbal aptitude questions.</p>
+                        <p>Simulate a real-time placement assessment test.</p>
                         <div class="mock-rules">
                             <h3>Assessment Rules:</h3>
                             <ul>
-                                <li>⏱️ <strong>Time Limit</strong>: 10 Minutes</li>
-                                <li>📝 <strong>Questions</strong>: 10 MCQ Questions</li>
-                                <li>🚀 <strong>Auto-Submit</strong>: The test will auto-submit when the timer runs out.</li>
-                                <li>📊 <strong>Score Logging</strong>: Results are saved to track your placement preparedness.</li>
+                                <li><i data-lucide="clock" class="inline-icon"></i> <strong>Time Limit</strong>: 15 Minutes</li>
+                                <li><i data-lucide="file-text" class="inline-icon"></i> <strong>Questions</strong>: 15 MCQ Questions</li>
+                                <li><i data-lucide="zap" class="inline-icon"></i> <strong>Auto-Submit</strong>: The test will auto-submit when the timer runs out.</li>
+                                <li><i data-lucide="bar-chart-3" class="inline-icon"></i> <strong>Score Logging</strong>: Results are saved to track your placement preparedness.</li>
                             </ul>
                         </div>
                         <button class="btn btn-primary btn-lg" onclick="startMockTest()">Start Assessment</button>
@@ -341,10 +344,13 @@
                     <!-- Active Assessment Interface -->
                     <div id="mock-test-panel" class="mock-test-interface hidden">
                         <div class="test-header">
-                            <div class="timer-display">
-                                Time Remaining: <span id="test-timer" class="text-danger">10:00</span>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                                <span id="mock-test-company-badge" class="badge badge-success"><i data-lucide="building-2" class="inline-icon"></i> <span id="mock-test-company-name">Target Company</span></span>
+                                <div class="timer-display">
+                                    Time Remaining: <span id="test-timer" class="text-danger">15:00</span>
+                                </div>
                             </div>
-                            <div id="test-progress-num" class="progress-info">Question 1 of 10</div>
+                            <div id="test-progress-num" class="progress-info">Question 1 of 15</div>
                         </div>
 
                         <!-- Progress Bar indicator -->
@@ -354,24 +360,24 @@
 
                         <!-- Question Area -->
                         <div class="mock-question-container">
-                            <h3 id="mock-question-text" class="question-text">A train travels 120 km in 2 hours. What is its speed?</h3>
+                            <h3 id="mock-question-text" class="question-text">Question text will load here...</h3>
                             
                             <div class="options-list">
                                 <label class="option-item">
                                     <input type="radio" name="mock-option" value="A" onchange="saveMockAnswer()">
-                                    <span class="option-label">A.</span> <span id="opt-mock-a">40 km/h</span>
+                                    <span class="option-label">A.</span> <span id="opt-mock-a">Option A</span>
                                 </label>
                                 <label class="option-item">
                                     <input type="radio" name="mock-option" value="B" onchange="saveMockAnswer()">
-                                    <span class="option-label">B.</span> <span id="opt-mock-b">50 km/h</span>
+                                    <span class="option-label">B.</span> <span id="opt-mock-b">Option B</span>
                                 </label>
                                 <label class="option-item">
                                     <input type="radio" name="mock-option" value="C" onchange="saveMockAnswer()">
-                                    <span class="option-label">C.</span> <span id="opt-mock-c">60 km/h</span>
+                                    <span class="option-label">C.</span> <span id="opt-mock-c">Option C</span>
                                 </label>
                                 <label class="option-item">
                                     <input type="radio" name="mock-option" value="D" onchange="saveMockAnswer()">
-                                    <span class="option-label">D.</span> <span id="opt-mock-d">70 km/h</span>
+                                    <span class="option-label">D.</span> <span id="opt-mock-d">Option D</span>
                                 </label>
                             </div>
                         </div>
@@ -386,14 +392,18 @@
 
                     <!-- Test Score Results Screen -->
                     <div id="mock-result-panel" class="mock-result-card hidden">
-                        <div class="result-icon">🎯</div>
+                        <div class="result-icon"><i data-lucide="award"></i></div>
                         <h2>Assessment Completed!</h2>
-                        <p>Your mock test has been scored and saved to the database.</p>
+                        <p id="mock-result-company-desc">Your mock test has been scored and saved to the database.</p>
                         
                         <div class="result-stats">
                             <div class="res-stat-box">
+                                <span class="res-stat-label">Target Company</span>
+                                <span id="res-company" class="res-stat-value" style="font-size: 1.25rem;">Company</span>
+                            </div>
+                            <div class="res-stat-box">
                                 <span class="res-stat-label">Score</span>
-                                <span id="res-score" class="res-stat-value">16/20</span>
+                                <span id="res-score" class="res-stat-value">12/15</span>
                             </div>
                             <div class="res-stat-box">
                                 <span class="res-stat-label">Percentage</span>
@@ -704,7 +714,7 @@
 
                     <!-- Toggle Reference Solution button -->
                     <button class="btn btn-secondary btn-sm" id="btn-toggle-solution" onclick="toggleSolutionDisplay()" style="margin: 10px 0; align-self: flex-start;">
-                        👁️ Show Model Solution
+                        <i data-lucide="eye"></i> <span>Show Model Solution</span>
                     </button>
                     
                     <div id="solution-wrapper" class="hidden">
@@ -724,13 +734,13 @@
 
                     <div class="ai-bot-container">
                         <button class="btn btn-primary" id="btn-ask-ai" onclick="askAiAssistant()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            🤖 Ask AI Tutor to Review Code
+                            <i data-lucide="bot"></i> <span>Ask AI Tutor to Review Code</span>
                         </button>
                         
                         <!-- AI Chat Panel (Hidden by default) -->
                         <div id="ai-chat-panel" class="ai-chat-panel hidden">
                             <div class="chat-header">
-                                💬 AI Placement Assistant
+                                <i data-lucide="message-square"></i> AI Placement Assistant
                             </div>
                             <div class="chat-messages" id="ai-chat-messages">
                                 <!-- Loaded dynamically -->
@@ -753,7 +763,10 @@
         </div>
     </dialog>
 
+    <!-- Lucide Icons -->
+    <script src="js/lucide.min.js"></script>
+
     <!-- Load the main JS application file -->
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=mock-ui-clean-1"></script>
 </body>
 </html>

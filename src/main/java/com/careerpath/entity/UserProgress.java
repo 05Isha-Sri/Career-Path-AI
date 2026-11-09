@@ -3,10 +3,7 @@ package com.careerpath.entity;
 import jakarta.persistence.*;
 import java.util.Date;
 
-/**
- * Entity class representing user progress (marking topics or coding questions as completed).
- * Maps to the 'user_progress' table.
- */
+
 @Entity
 @Table(name = "user_progress")
 public class UserProgress {
@@ -19,16 +16,15 @@ public class UserProgress {
     private Long userId;
 
     @Column(name = "item_type", nullable = false)
-    private String itemType; // 'TOPIC' or 'CODING'
+    private String itemType; 
 
     @Column(name = "item_key", nullable = false)
-    private String itemKey; // Holds the topic name (e.g. 'OOP') or coding question ID as a string
+    private String itemKey; 
 
     @Column(name = "completed_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
     private Date completedAt;
 
-    // Default No-Argument Constructor
     public UserProgress() {
         this.completedAt = new Date();
     }
@@ -40,9 +36,6 @@ public class UserProgress {
         this.completedAt = new Date();
     }
 
-    // ===================================================================
-    // Getter and Setter Methods
-    // ===================================================================
 
     public Long getId() {
         return id;

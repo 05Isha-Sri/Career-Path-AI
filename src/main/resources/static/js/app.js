@@ -24,12 +24,22 @@ let mockTimeRemaining = 600; // 10 minutes in seconds
 let codingQuestions = [];
 let activeCodingQuestion = null;
 
+/**
+ * Refreshes all Lucide icons on the page.
+ */
+function refreshIcons() {
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons();
+    }
+}
+
 // ===================================================================
 // APPLICATION INITIALIZATION & SESSION CHECK
 // ===================================================================
 
 // When the page finishes loading, check if the user is already logged in
 document.addEventListener("DOMContentLoaded", () => {
+    refreshIcons();
     checkSession();
 });
 
@@ -86,11 +96,17 @@ function switchAuthTab(tab) {
 function handleLogin(event) {
     event.preventDefault(); // Stop page reload
 
-    const usernameInput = document.getElementById("login-username").value;
-    const passwordInput = document.getElementById("login-password").value;
+    const usernameInput = (document.getElementById("login-username").value || "").trim();
+    const passwordInput = (document.getElementById("login-password").value || "").trim();
+
+    if (!usernameInput || !passwordInput) {
+        showToast("Please enter both username/email and password.", "error");
+        return;
+    }
 
     const credentials = {
         username: usernameInput,
+        email: usernameInput,
         password: passwordInput
     };
 
@@ -266,9 +282,11 @@ function switchView(viewId) {
     } else if (viewId === "companies-view") {
         loadCompanies();
     } else if (viewId === "roadmap-view") {
-        loadRoadmap();
+        loadUserProgress().then(() => loadRoadmap());
     } else if (viewId === "aptitude-view") {
         loadAptitudePractice("QUANTITATIVE");
+    } else if (viewId === "mocktest-view") {
+        updateMockLandingPage();
     } else if (viewId === "coding-view") {
         loadCodingQuestions();
     } else if (viewId === "resources-view") {
@@ -277,6 +295,8 @@ function switchView(viewId) {
     } else if (viewId === "admin-view") {
         loadAdminConsole();
     }
+
+    refreshIcons();
 }
 
 // ===================================================================
@@ -381,14 +401,18 @@ function loadCompanies() {
             companies.forEach(company => {
                 const isActive = currentUser.selectedCompanyId === company.id;
                 const activeClass = isActive ? "selected-active" : "";
-                const btnText = isActive ? "✓ Target Set" : "Select Company";
+                const btnText = isActive ? '<i data-lucide="check"></i> Target Set' : "Select Company";
                 const btnClass = isActive ? "btn-success" : "btn-primary";
+
+                const formattedDesc = (company.description || "")
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/Key areas:/g, '<strong>Key areas:</strong>');
 
                 gridHtml += `
                     <div class="company-card ${activeClass}" onclick="viewCompanyProfile(${company.id})">
-                        <div class="company-logo-placeholder">🏢</div>
+                        <div class="company-logo-placeholder"><i data-lucide="building-2"></i></div>
                         <h3>${company.name}</h3>
-                        <p>${company.description.substring(0, 80)}...</p>
+                        <p class="company-card-desc">${formattedDesc}</p>
                         <button class="btn ${btnClass} company-card-btn" onclick="handleSelectCompany(event, ${company.id})">
                             ${btnText}
                         </button>
@@ -396,6 +420,7 @@ function loadCompanies() {
                 `;
             });
             grid.innerHTML = gridHtml;
+            refreshIcons();
         })
         .catch(err => console.error("Error loading companies:", err));
 }
@@ -417,12 +442,20 @@ function handleSelectCompany(event, companyId) {
     })
     .then(user => {
         currentUser = user;
-        showToast("Target company updated successfully!", "success");
+        showToast("Target company updated! Roadmap progress has been reset for the new target.", "success");
         
-        // Refresh local views
+        // Reset aptitude practice to Quantitative (numerical questions)
+        loadAptitudePractice("QUANTITATIVE");
+
+        // Refresh local views and re-sync progress
         loadCompanies();
-        loadActiveCompanyDetails();
-        loadDashboardStats();
+        loadActiveCompanyDetails().then(() => {
+            updateMockLandingPage();
+        });
+        loadUserProgress().then(() => {
+            loadRoadmap();
+            loadDashboardStats();
+        });
     })
     .catch(err => showToast(err.message, "error"));
 }
@@ -436,6 +469,7 @@ function loadActiveCompanyDetails() {
         badge.textContent = "No Company Selected";
         badge.className = "badge badge-danger";
         activeCompany = null;
+        updateMockLandingPage();
         return Promise.resolve();
     }
 
@@ -445,6 +479,7 @@ function loadActiveCompanyDetails() {
             activeCompany = company;
             badge.textContent = "Target: " + company.name;
             badge.className = "badge badge-success";
+            updateMockLandingPage();
         })
         .catch(err => console.error("Error loading active company:", err));
 }
@@ -457,7 +492,10 @@ function viewCompanyProfile(companyId) {
         .then(res => res.json())
         .then(company => {
             document.getElementById("profile-company-name").textContent = company.name + " Placement Guide";
-            document.getElementById("profile-company-desc").textContent = company.description;
+            const formattedProfileDesc = (company.description || "")
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/Key areas:/g, '<strong>Key areas:</strong>');
+            document.getElementById("profile-company-desc").innerHTML = formattedProfileDesc;
             
             // Show details panel
             document.getElementById("company-profile-panel").classList.remove("hidden");
@@ -476,7 +514,7 @@ function viewCompanyProfile(companyId) {
                     intList.innerHTML = "";
 
                     topics.forEach(topic => {
-                        const li = `<li><span class="topic-bullet">✓</span> ${topic.topicName}</li>`;
+                        const li = `<li><span class="topic-bullet"><i data-lucide="check"></i></span> ${topic.topicName}</li>`;
                         if (topic.category === "APTITUDE") {
                             aptList.innerHTML += li;
                         } else if (topic.category === "CODING") {
@@ -490,6 +528,7 @@ function viewCompanyProfile(companyId) {
                     if (aptList.innerHTML === "") aptList.innerHTML = "<li>General Quantitative</li>";
                     if (codList.innerHTML === "") codList.innerHTML = "<li>Basic Array Operations</li>";
                     if (intList.innerHTML === "") intList.innerHTML = "<li>OOP Concepts</li>";
+                    refreshIcons();
                 });
         });
 }
@@ -497,6 +536,152 @@ function viewCompanyProfile(companyId) {
 // ===================================================================
 // LEARNING ROADMAP MODULE
 // ===================================================================
+
+const companySubtopicsMap = {
+    // 1: TCS
+    1: {
+        "Quantitative Aptitude": [
+            "Percentages, Profit & Loss",
+            "Ratio, Proportion & Averages",
+            "Time & Work, Time & Distance",
+            "Number System & Data Interpretation"
+        ],
+        "Verbal Ability": [
+            "Error Spotting & Sentence Correction",
+            "Reading Comprehension",
+            "Sentence Completion & Para Jumbles"
+        ],
+        "Logical Reasoning": [
+            "Number & Letter Series",
+            "Coding-Decoding",
+            "Blood Relations & Seating Arrangements"
+        ]
+    },
+    // 2: Infosys
+    2: {
+        "Quantitative Aptitude": [
+            "Percentages, Profit & Loss, Mixtures & Allegations",
+            "Permutations & Combinations, Probability",
+            "Time & Work, Time, Speed & Distance",
+            "Number System & Data Interpretation"
+        ],
+        "Verbal Ability": [
+            "Error Spotting & Sentence Correction",
+            "Reading Comprehension",
+            "Sentence Completion & Para Jumbles"
+        ],
+        "Logical Reasoning": [
+            "Seating Arrangements & Analytical Puzzles",
+            "Syllogisms & Data Sufficiency",
+            "Coding-Decoding & Number Series"
+        ]
+    },
+    // 3: Cognizant
+    3: {
+        "Quantitative Aptitude": [
+            "Percentages, Profit & Loss",
+            "Ratio, Proportion & Averages",
+            "Time & Work, Time, Speed & Distance",
+            "Number System & Data Interpretation"
+        ],
+        "Verbal Ability & Communication": [
+            "Error Spotting & Sentence Correction",
+            "Reading Comprehension",
+            "Sentence Completion & Para Jumbles"
+        ],
+        "Logical Reasoning": [
+            "Number & Letter Series",
+            "Seating Arrangements & Puzzles",
+            "Coding-Decoding & Syllogisms"
+        ]
+    },
+    // 4: Accenture
+    4: {
+        "Quantitative Aptitude": [
+            "Percentages, Profit & Loss",
+            "Ratio, Proportion & Averages",
+            "Time & Work, Time, Speed & Distance",
+            "Numerical Ability & Data Interpretation"
+        ],
+        "Verbal Ability": [
+            "Error Spotting & Sentence Correction",
+            "Reading Comprehension",
+            "Vocabulary & Sentence Completion"
+        ],
+        "Logical Reasoning": [
+            "Critical Thinking & Analytical Reasoning",
+            "Abstract Reasoning & Pattern Recognition",
+            "Logical Puzzles & Problem-Solving"
+        ]
+    },
+    // 5: Capgemini
+    5: {
+        "Quantitative Aptitude": [
+            "Percentages, Profit & Loss",
+            "Ratio, Proportion & Averages",
+            "Time & Work, Time, Speed & Distance",
+            "Number System & Data Interpretation"
+        ],
+        "Verbal Ability": [
+            "Error Spotting & Sentence Correction",
+            "Reading Comprehension",
+            "Vocabulary, Synonyms & Antonyms"
+        ],
+        "Logical Reasoning": [
+            "Pattern Recognition & Number Series",
+            "Seating Arrangements & Logical Puzzles",
+            "Deductive & Inductive Reasoning"
+        ]
+    }
+};
+
+function getSubtopicsForSection(companyId, sectionName) {
+    const cid = Number(companyId);
+    if (companySubtopicsMap[cid] && companySubtopicsMap[cid][sectionName]) {
+        return companySubtopicsMap[cid][sectionName];
+    }
+    if (activeCompany && activeCompany.name) {
+        if (activeCompany.name.includes("TCS") && companySubtopicsMap[1][sectionName]) {
+            return companySubtopicsMap[1][sectionName];
+        }
+        if (activeCompany.name.includes("Infosys") && companySubtopicsMap[2][sectionName]) {
+            return companySubtopicsMap[2][sectionName];
+        }
+        if (activeCompany.name.includes("Cognizant") && companySubtopicsMap[3][sectionName]) {
+            return companySubtopicsMap[3][sectionName];
+        }
+        if (activeCompany.name.includes("Accenture") && companySubtopicsMap[4][sectionName]) {
+            return companySubtopicsMap[4][sectionName];
+        }
+        if (activeCompany.name.includes("Capgemini") && companySubtopicsMap[5][sectionName]) {
+            return companySubtopicsMap[5][sectionName];
+        }
+    }
+    return null;
+}
+
+function hasStructuredRoadmap(companyId) {
+    const cid = Number(companyId);
+    if (cid >= 1 && cid <= 5) return true;
+    if (activeCompany && activeCompany.name) {
+        return activeCompany.name.includes("TCS") || 
+               activeCompany.name.includes("Infosys") || 
+               activeCompany.name.includes("Cognizant") || 
+               activeCompany.name.includes("Accenture") ||
+               activeCompany.name.includes("Capgemini");
+    }
+    return false;
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 /**
  * Load the roadmap timeline for the selected company.
@@ -515,6 +700,8 @@ function loadRoadmap() {
     placeholder.classList.add("hidden");
     timeline.classList.remove("hidden");
 
+    const isStructured = hasStructuredRoadmap(currentUser.selectedCompanyId);
+
     // Fetch roadmap steps
     fetch(`/api/companies/${currentUser.selectedCompanyId}/roadmap`)
         .then(res => res.json())
@@ -526,56 +713,251 @@ function loadRoadmap() {
 
             let timelineHtml = "";
             roadmapItems.forEach(item => {
-                // Check if this topic has been completed by the user
-                const isCompleted = isItemCompleted("TOPIC", item.topicName);
-                const completedClass = isCompleted ? "completed-week" : "";
-                const checkedAttr = isCompleted ? "checked" : "";
+                const subtopics = isStructured ? getSubtopicsForSection(currentUser.selectedCompanyId, item.topicName) : null;
 
-                timelineHtml += `
-                    <div class="timeline-item ${completedClass}">
-                        <div class="timeline-badge">${item.weekNumber}</div>
-                        <div class="timeline-card">
-                            <h3>Week ${item.weekNumber}: ${item.topicName}</h3>
-                            <p>${item.description}</p>
-                            <label class="roadmap-completion-check">
-                                <input type="checkbox" ${checkedAttr} onchange="handleTopicToggle(this, '${item.topicName}')">
-                                Mark Week ${item.weekNumber} Complete
-                            </label>
+                if (subtopics && subtopics.length > 0) {
+                    // Sections 1, 2, 3: Individual checkboxes for each topic + main section checkbox
+                    const isSectionDirectlyDone = isItemCompleted("TOPIC", item.topicName);
+                    const allSubsDone = subtopics.every(sub => isItemCompleted("TOPIC", sub));
+                    const isSectionCompleted = isSectionDirectlyDone || allSubsDone;
+                    const completedClass = isSectionCompleted ? "completed-week" : "";
+                    const mainCheckedAttr = isSectionCompleted ? "checked" : "";
+
+                    timelineHtml += `
+                        <div class="timeline-item ${completedClass}">
+                            <div class="timeline-badge">${item.weekNumber}</div>
+                            <div class="timeline-card">
+                                <h3>${item.weekNumber}. ${escapeHtml(item.topicName)}</h3>
+                                <ul class="roadmap-subtopics">
+                                    ${subtopics.map(sub => {
+                                        const isSubDone = isItemCompleted("TOPIC", sub) || isSectionDirectlyDone;
+                                        const subCheckedAttr = isSubDone ? "checked" : "";
+                                        const subCheckedClass = isSubDone ? "checked" : "";
+                                        return `
+                                            <li>
+                                                <label class="roadmap-subtopic-check ${subCheckedClass}">
+                                                    <input type="checkbox" ${subCheckedAttr}
+                                                           data-section="${escapeHtml(item.topicName)}"
+                                                           data-subtopic="${escapeHtml(sub)}"
+                                                           onchange="handleSubtopicChange(this)">
+                                                    <span>${escapeHtml(sub)}</span>
+                                                </label>
+                                            </li>
+                                        `;
+                                    }).join("")}
+                                </ul>
+                                <label class="roadmap-completion-check main-section-check">
+                                    <input type="checkbox" ${mainCheckedAttr}
+                                           data-section="${escapeHtml(item.topicName)}"
+                                           onchange="handleMainSectionChange(this)">
+                                    Mark Section ${item.weekNumber} Complete
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else if (isStructured) {
+                    // Sections 4, 5, 6, 7: Only one main checkbox each, without sub-checkboxes
+                    const isCompleted = isItemCompleted("TOPIC", item.topicName);
+                    const completedClass = isCompleted ? "completed-week" : "";
+                    const checkedAttr = isCompleted ? "checked" : "";
+
+                    timelineHtml += `
+                        <div class="timeline-item ${completedClass}">
+                            <div class="timeline-badge">${item.weekNumber}</div>
+                            <div class="timeline-card">
+                                <h3>${item.weekNumber}. ${escapeHtml(item.topicName)}</h3>
+                                <p>${escapeHtml(item.description)}</p>
+                                <label class="roadmap-completion-check main-section-check">
+                                    <input type="checkbox" ${checkedAttr}
+                                           data-section="${escapeHtml(item.topicName)}"
+                                           onchange="handleSimpleSectionChange(this)">
+                                    Mark Section ${item.weekNumber} Complete
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Other companies: standard weekly roadmap view
+                    const isCompleted = isItemCompleted("TOPIC", item.topicName);
+                    const completedClass = isCompleted ? "completed-week" : "";
+                    const checkedAttr = isCompleted ? "checked" : "";
+
+                    timelineHtml += `
+                        <div class="timeline-item ${completedClass}">
+                            <div class="timeline-badge">${item.weekNumber}</div>
+                            <div class="timeline-card">
+                                <h3>Week ${item.weekNumber}: ${escapeHtml(item.topicName)}</h3>
+                                <p>${escapeHtml(item.description)}</p>
+                                <label class="roadmap-completion-check">
+                                    <input type="checkbox" ${checkedAttr}
+                                           data-section="${escapeHtml(item.topicName)}"
+                                           onchange="handleSimpleSectionChange(this)">
+                                    Mark Week ${item.weekNumber} Complete
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                }
             });
             timeline.innerHTML = timelineHtml;
+            refreshIcons();
         })
         .catch(err => console.error("Error loading roadmap:", err));
 }
 
 /**
- * Toggle topic completion when student checks/unchecks roadmap checkbox.
+ * Handle main section toggle for multi-subtopic sections (Sections 1, 2, 3).
+ * Marks the section and all its subtopics as complete or incomplete.
  */
-function handleTopicToggle(checkbox, topicName) {
+async function handleMainSectionChange(checkbox) {
+    const sectionName = checkbox.getAttribute("data-section");
+    const isChecked = checkbox.checked;
+    const url = isChecked ? "/api/progress/complete" : "/api/progress/incomplete";
+    const subtopics = getSubtopicsForSection(currentUser.selectedCompanyId, sectionName) || [];
+
+    try {
+        const promises = [
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemType: "TOPIC", itemKey: sectionName })
+            })
+        ];
+
+        subtopics.forEach(sub => {
+            promises.push(
+                fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ itemType: "TOPIC", itemKey: sub })
+                })
+            );
+        });
+
+        await Promise.all(promises);
+        showToast(isChecked ? `Marked "${sectionName}" as complete!` : `Marked "${sectionName}" as incomplete`, "info");
+        await loadUserProgress();
+        loadRoadmap();
+        loadDashboardStats();
+    } catch (err) {
+        console.error("Error updating section progress:", err);
+        checkbox.checked = !isChecked;
+        showToast("Failed to update progress.", "error");
+    }
+}
+
+/**
+ * Handle individual subtopic toggle (TCS sections 1, 2, 3).
+ * Toggles subtopic in backend. If all subtopics are completed, marks section complete.
+ * If unchecking, unmarks the main section as complete.
+ */
+async function handleSubtopicChange(checkbox) {
+    const sectionName = checkbox.getAttribute("data-section");
+    const subtopicName = checkbox.getAttribute("data-subtopic");
+    const isChecked = checkbox.checked;
+    const subtopics = getSubtopicsForSection(currentUser.selectedCompanyId, sectionName) || [];
+
+    try {
+        if (isChecked) {
+            // 1. Mark this subtopic as complete
+            await fetch("/api/progress/complete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemType: "TOPIC", itemKey: subtopicName })
+            });
+
+            // 2. Check if all other subtopics are completed
+            const allOthersDone = subtopics
+                .filter(s => s !== subtopicName)
+                .every(s => isItemCompleted("TOPIC", s));
+
+            if (allOthersDone) {
+                // All subtopics are now completed! Mark parent section complete
+                await fetch("/api/progress/complete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ itemType: "TOPIC", itemKey: sectionName })
+                });
+            }
+        } else {
+            // 1. If section was marked complete, ensure other subtopics are explicitly saved
+            const isSectionDirectlyDone = isItemCompleted("TOPIC", sectionName);
+            if (isSectionDirectlyDone) {
+                const otherSubs = subtopics.filter(s => s !== subtopicName);
+                await Promise.all(otherSubs.map(s =>
+                    fetch("/api/progress/complete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ itemType: "TOPIC", itemKey: s })
+                    })
+                ));
+            }
+
+            // 2. Mark this subtopic incomplete
+            await fetch("/api/progress/incomplete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemType: "TOPIC", itemKey: subtopicName })
+            });
+
+            // 3. Mark parent section incomplete
+            await fetch("/api/progress/incomplete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemType: "TOPIC", itemKey: sectionName })
+            });
+        }
+
+        showToast(isChecked ? `Completed "${subtopicName}"!` : `Unmarked "${subtopicName}"`, "info");
+        await loadUserProgress();
+        loadRoadmap();
+        loadDashboardStats();
+    } catch (err) {
+        console.error("Error updating subtopic progress:", err);
+        checkbox.checked = !isChecked;
+        showToast("Failed to update progress.", "error");
+    }
+}
+
+/**
+ * Handle single topic toggle (TCS 4-7 and other companies).
+ */
+async function handleSimpleSectionChange(checkbox) {
+    const topicName = checkbox.getAttribute("data-section");
     const isChecked = checkbox.checked;
     const url = isChecked ? "/api/progress/complete" : "/api/progress/incomplete";
 
-    fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemType: "TOPIC", itemKey: topicName })
-    })
-    .then(res => {
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ itemType: "TOPIC", itemKey: topicName })
+        });
+
         if (res.ok) {
-            showToast(isChecked ? `Marked "${topicName}" as completed!` : `Marked "${topicName}" as incomplete`, "info");
-            
-            // Reload local progress records and update stats
-            loadUserProgress().then(() => {
-                loadRoadmap();
-                loadDashboardStats();
-            });
+            showToast(isChecked ? `Marked "${topicName}" as complete!` : `Marked "${topicName}" as incomplete`, "info");
+            await loadUserProgress();
+            loadRoadmap();
+            loadDashboardStats();
         } else {
-            checkbox.checked = !isChecked; // Revert checkbox state
+            checkbox.checked = !isChecked;
             showToast("Failed to update progress.", "error");
         }
-    });
+    } catch (err) {
+        console.error("Error updating topic progress:", err);
+        checkbox.checked = !isChecked;
+        showToast("Failed to update progress.", "error");
+    }
+}
+
+/**
+ * Backwards compatibility alias for any legacy calls
+ */
+function handleTopicToggle(checkbox, topicName) {
+    if (!checkbox.getAttribute("data-section")) {
+        checkbox.setAttribute("data-section", topicName);
+    }
+    handleSimpleSectionChange(checkbox);
 }
 
 // ===================================================================
@@ -586,23 +968,44 @@ function handleTopicToggle(checkbox, topicName) {
  * Load practice questions under selected category (Quantitative, Logical, Verbal).
  */
 function loadAptitudePractice(category, buttonElement) {
-    // Highlight active category tab
-    if (buttonElement) {
-        const btns = document.querySelectorAll(".practice-categories .btn");
-        btns.forEach(b => b.classList.remove("active"));
-        buttonElement.classList.add("active");
-    }
+    category = category || "QUANTITATIVE";
 
-    fetch(`/api/aptitude/questions?category=${category}`)
+    // Highlight active category tab
+    const btns = document.querySelectorAll(".practice-categories .btn");
+    btns.forEach(b => {
+        if (buttonElement) {
+            if (b === buttonElement) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        } else {
+            const bCat = b.getAttribute("data-category") || 
+                (b.textContent.toLowerCase().includes("quant") ? "QUANTITATIVE" :
+                 b.textContent.toLowerCase().includes("logic") ? "LOGICAL" : "VERBAL");
+            if (bCat === category) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        }
+    });
+
+    const companyId = currentUser && currentUser.selectedCompanyId ? currentUser.selectedCompanyId : "";
+    const url = companyId 
+        ? `/api/aptitude/questions?category=${encodeURIComponent(category)}&companyId=${encodeURIComponent(companyId)}`
+        : `/api/aptitude/questions?category=${encodeURIComponent(category)}`;
+
+    fetch(url)
         .then(res => res.json())
         .then(questions => {
-            practiceQuestions = questions;
+            practiceQuestions = questions || [];
             currentPracticeIndex = 0;
             
             const card = document.getElementById("practice-card");
             const empty = document.getElementById("practice-empty");
 
-            if (questions.length === 0) {
+            if (!questions || questions.length === 0) {
                 card.classList.add("hidden");
                 empty.classList.remove("hidden");
                 return;
@@ -682,14 +1085,15 @@ function submitPracticeAnswer() {
 
     if (isCorrect) {
         feedbackPanel.classList.remove("incorrect");
-        feedbackTitle.textContent = "✓ Correct Answer!";
+        feedbackTitle.innerHTML = '<i data-lucide="check-circle-2"></i> Correct Answer!';
     } else {
         feedbackPanel.classList.add("incorrect");
-        feedbackTitle.textContent = `✗ Incorrect. Correct Option is ${question.correctOption}`;
+        feedbackTitle.innerHTML = `<i data-lucide="x-circle"></i> Incorrect. Correct Option is ${question.correctOption}`;
     }
 
     feedbackDesc.textContent = question.explanation || "No explanation details provided.";
     feedbackPanel.classList.remove("hidden");
+    refreshIcons();
 
     // Disable the check answer button now that it's submitted
     document.getElementById("practice-submit-btn").disabled = true;
@@ -708,34 +1112,121 @@ function navigatePractice(direction) {
 // ===================================================================
 
 /**
- * Enter assessment mode. Fetches random mock questions and starts countdown timer.
+ * Update the mock assessment landing page with selected company info.
+ */
+function updateMockLandingPage() {
+    const titleEl = document.querySelector("#mock-start-panel h2");
+    const descEl = document.querySelector("#mock-start-panel p");
+    const rulesList = document.querySelector("#mock-start-panel .mock-rules ul");
+    const startBtn = document.querySelector("#mock-start-panel button");
+
+    if (activeCompany && activeCompany.name) {
+        if (titleEl) titleEl.textContent = `${activeCompany.name} Aptitude Mock Assessment`;
+        if (descEl) descEl.textContent = `Simulate a real-time placement assessment test for ${activeCompany.name}.`;
+        if (rulesList) {
+            rulesList.innerHTML = `
+                <li><i data-lucide="building-2" class="inline-icon"></i> <strong>Target Company</strong>: ${activeCompany.name}</li>
+                <li><i data-lucide="clock" class="inline-icon"></i> <strong>Time Limit</strong>: 15 Minutes</li>
+                <li><i data-lucide="file-text" class="inline-icon"></i> <strong>Questions</strong>: 15 MCQ Questions</li>
+                <li><i data-lucide="zap" class="inline-icon"></i> <strong>Auto-Submit</strong>: The test will auto-submit when the timer runs out</li>
+                <li><i data-lucide="bar-chart-3" class="inline-icon"></i> <strong>Score Logging</strong>: Results are saved to track your placement preparedness</li>
+            `;
+            refreshIcons();
+        }
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.textContent = `Start ${activeCompany.name} Assessment`;
+        }
+    } else {
+        if (titleEl) titleEl.textContent = "Aptitude Mock Assessment";
+        if (descEl) descEl.textContent = "Please select a target company in the Companies tab to start a company-specific mock assessment.";
+        if (rulesList) {
+            rulesList.innerHTML = `
+                <li class="text-danger"><i data-lucide="alert-circle" class="inline-icon"></i> <strong>No company selected</strong>: Please select a target company under Companies first.</li>
+            `;
+            refreshIcons();
+        }
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.textContent = "Start Assessment";
+        }
+    }
+}
+
+/**
+ * Render the timer text in MM:SS format.
+ */
+function renderMockTimerText() {
+    const minutes = Math.floor(mockTimeRemaining / 60);
+    const seconds = mockTimeRemaining % 60;
+    
+    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+    const formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
+
+    const timerSpan = document.getElementById("test-timer");
+    if (timerSpan) {
+        timerSpan.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        if (mockTimeRemaining < 60) {
+            timerSpan.className = "text-danger";
+        } else {
+            timerSpan.className = "";
+        }
+    }
+}
+
+/**
+ * Enter assessment mode. Fetches company-specific mock questions and starts countdown timer.
  */
 function startMockTest() {
-    fetch("/api/aptitude/mock")
+    if (!currentUser || !currentUser.selectedCompanyId) {
+        showToast("Please select a target company under the Companies page first.", "warning");
+        return;
+    }
+
+    const companyId = currentUser.selectedCompanyId;
+    fetch(`/api/aptitude/mock?companyId=${encodeURIComponent(companyId)}`)
         .then(res => res.json())
         .then(questions => {
-            if (questions.length === 0) {
-                showToast("No aptitude questions available in database to start mock test.", "error");
+            if (!questions || questions.length === 0) {
+                showToast("No aptitude practice questions found for your target company.", "error");
                 return;
             }
 
             mockQuestions = questions;
             currentMockIndex = 0;
             mockAnswers = {};
-            mockTimeRemaining = 600; // Reset timer to 10 minutes (600 seconds)
+            
+            // Dynamic timer: 1 minute (60s) per question, minimum 10 minutes (600s)
+            mockTimeRemaining = Math.max(600, mockQuestions.length * 60);
+
+            // Display company badge in active test interface
+            const compName = activeCompany && activeCompany.name ? activeCompany.name : "Target Company";
+            const compNameEl = document.getElementById("mock-test-company-name");
+            if (compNameEl) {
+                compNameEl.textContent = `${compName} Assessment`;
+            }
 
             // Hide start landing panel and show active test board
             document.getElementById("mock-start-panel").classList.add("hidden");
             document.getElementById("mock-result-panel").classList.add("hidden");
             document.getElementById("mock-test-panel").classList.remove("hidden");
+            refreshIcons();
 
             // Display first question
             showMockQuestion(0);
 
             // Start countdown interval
+            if (mockTimerInterval) {
+                clearInterval(mockTimerInterval);
+                mockTimerInterval = null;
+            }
+            renderMockTimerText();
             mockTimerInterval = setInterval(updateMockTimer, 1000);
         })
-        .catch(err => console.error("Error loading mock test questions:", err));
+        .catch(err => {
+            console.error("Error loading mock test questions:", err);
+            showToast("Failed to load mock assessment questions.", "error");
+        });
 }
 
 /**
@@ -810,28 +1301,14 @@ function updateMockTimer() {
         return;
     }
 
-    const minutes = Math.floor(mockTimeRemaining / 60);
-    const seconds = mockTimeRemaining % 60;
-    
-    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
-    const formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
-
-    const timerSpan = document.getElementById("test-timer");
-    timerSpan.textContent = `${formattedMinutes}:${formattedSeconds}`;
-
-    // Color timer red if less than 1 minute remains
-    if (mockTimeRemaining < 60) {
-        timerSpan.className = "text-danger";
-    } else {
-        timerSpan.className = "";
-    }
+    renderMockTimerText();
 }
 
 /**
  * Prompts student before manual mock test submission.
  */
 function confirmSubmitMock() {
-    const answeredCount = Object.keys(mockAnswers).length;
+    const answeredCount = Object.values(mockAnswers).filter(val => val && val.trim().length > 0).length;
     const totalCount = mockQuestions.length;
 
     const confirmSub = confirm(`You have answered ${answeredCount} out of ${totalCount} questions. Are you sure you want to submit?`);
@@ -850,10 +1327,18 @@ function submitMockTestResults() {
         mockTimerInterval = null;
     }
 
+    // Build payload ensuring all questions in mockQuestions are accounted for (unanswered as "")
+    const payload = {};
+    if (mockQuestions && mockQuestions.length > 0) {
+        mockQuestions.forEach(q => {
+            payload[q.id.toString()] = mockAnswers[q.id] || "";
+        });
+    }
+
     fetch("/api/aptitude/mock/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mockAnswers)
+        body: JSON.stringify(payload)
     })
     .then(res => {
         if (res.ok) return res.json();
@@ -861,11 +1346,21 @@ function submitMockTestResults() {
     })
     .then(result => {
         // Show result stats card
+        const compName = activeCompany && activeCompany.name ? activeCompany.name : "Target Company";
+        const resCompanyEl = document.getElementById("res-company");
+        if (resCompanyEl) resCompanyEl.textContent = compName;
+
+        const resCompanyDescEl = document.getElementById("mock-result-company-desc");
+        if (resCompanyDescEl) {
+            resCompanyDescEl.innerHTML = `Your <strong>${escapeHtml(compName)}</strong> mock assessment has been scored and saved to the database.`;
+        }
+
         document.getElementById("res-score").textContent = `${result.score}/${result.totalQuestions}`;
         document.getElementById("res-percent").textContent = `${result.percentage}%`;
 
         document.getElementById("mock-test-panel").classList.add("hidden");
         document.getElementById("mock-result-panel").classList.remove("hidden");
+        refreshIcons();
 
         // Reload data to reflect new scores
         loadUserProgress();
@@ -887,6 +1382,7 @@ function resetMockView() {
     document.getElementById("mock-result-panel").classList.add("hidden");
     document.getElementById("mock-test-panel").classList.add("hidden");
     document.getElementById("mock-start-panel").classList.remove("hidden");
+    updateMockLandingPage();
 }
 
 // ===================================================================
@@ -926,7 +1422,9 @@ function renderCodingTable(level) {
     filtered.forEach(q => {
         // Check if completed
         const isCompleted = isItemCompleted("CODING", q.id);
-        const statusIcon = isCompleted ? "✅ Completed" : "⏳ Pending";
+        const statusIcon = isCompleted 
+            ? '<span class="status-badge completed"><i data-lucide="check-circle-2"></i> Completed</span>' 
+            : '<span class="status-badge pending"><i data-lucide="clock"></i> Pending</span>';
         const badgeClass = q.difficulty === "BEGINNER" ? "badge-success" : 
                            q.difficulty === "INTERMEDIATE" ? "badge-warning" : "badge-danger";
 
@@ -944,6 +1442,7 @@ function renderCodingTable(level) {
         `;
     });
     tbody.innerHTML = rowsHtml;
+    refreshIcons();
 }
 
 /**
@@ -984,7 +1483,7 @@ function openCodingModal(id) {
 
     // Reset solution view to hidden
     document.getElementById("solution-wrapper").classList.add("hidden");
-    document.getElementById("btn-toggle-solution").textContent = "👁️ Show Model Solution";
+    document.getElementById("btn-toggle-solution").innerHTML = '<i data-lucide="eye"></i> <span>Show Model Solution</span>';
 
     // Clear and reset notepad code editor
     document.getElementById("modal-editor").value = `public class Solution {\n    // Write your code here to solve: ${question.title}\n    \n}`;
@@ -994,7 +1493,7 @@ function openCodingModal(id) {
     document.getElementById("ai-chat-messages").innerHTML = "";
     document.getElementById("ai-chat-input").value = "";
     document.getElementById("btn-ask-ai").disabled = false;
-    document.getElementById("btn-ask-ai").textContent = "🤖 Ask AI Tutor to Review Code";
+    document.getElementById("btn-ask-ai").innerHTML = '<i data-lucide="bot"></i> <span>Ask AI Tutor to Review Code</span>';
 
     // Set completed status checkbox in modal footer
     const isCompleted = isItemCompleted("CODING", question.id);
@@ -1002,6 +1501,7 @@ function openCodingModal(id) {
 
     // Show native dialog modal
     document.getElementById("coding-modal").showModal();
+    refreshIcons();
 }
 
 /**
@@ -1021,11 +1521,12 @@ function toggleSolutionDisplay() {
     
     if (solutionWrapper.classList.contains("hidden")) {
         solutionWrapper.classList.remove("hidden");
-        toggleBtn.textContent = "👁️ Hide Model Solution";
+        toggleBtn.innerHTML = '<i data-lucide="eye-off"></i> <span>Hide Model Solution</span>';
     } else {
         solutionWrapper.classList.add("hidden");
-        toggleBtn.textContent = "👁️ Show Model Solution";
+        toggleBtn.innerHTML = '<i data-lucide="eye"></i> <span>Show Model Solution</span>';
     }
+    refreshIcons();
 }
 
 /**
@@ -1048,12 +1549,13 @@ function askAiAssistant() {
     chatPanel.classList.remove("hidden");
     chatMessages.innerHTML = `
         <div class="chat-bubble ai">
-            <strong>🤖 AI Tutor:</strong> Analyzing your code logic and checking for bugs... Please wait! 🔄
+            <strong>AI Tutor:</strong> Analyzing your code logic and checking for bugs... Please wait.
         </div>
     `;
 
     askBtn.disabled = true;
-    askBtn.textContent = "🤖 AI is reviewing...";
+    askBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> <span>AI is reviewing...</span>';
+    refreshIcons();
 
     fetch("/api/ai/review", {
         method: "POST",
@@ -1067,7 +1569,7 @@ function askAiAssistant() {
     .then(data => {
         chatMessages.innerHTML = `
             <div class="chat-bubble ai">
-                <strong>🤖 AI Tutor:</strong><br>${formatMarkdown(data.response)}
+                <strong>AI Tutor:</strong><br>${formatMarkdown(data.response)}
             </div>
         `;
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1075,13 +1577,14 @@ function askAiAssistant() {
     .catch(err => {
         chatMessages.innerHTML = `
             <div class="chat-bubble ai text-danger">
-                <strong>❌ Error:</strong> Failed to connect to AI tutor. Details: ${err.message}
+                <strong>Error:</strong> Failed to connect to AI tutor. Details: ${err.message}
             </div>
         `;
     })
     .finally(() => {
         askBtn.disabled = false;
-        askBtn.textContent = "🤖 Re-Review Code";
+        askBtn.innerHTML = '<i data-lucide="bot"></i> <span>Re-Review Code</span>';
+        refreshIcons();
     });
 }
 
@@ -1110,7 +1613,7 @@ function sendAiChatMessage() {
     const typingBubble = document.createElement("div");
     typingBubble.className = "chat-bubble ai";
     typingBubble.id = "ai-typing-bubble";
-    typingBubble.innerHTML = `<strong>🤖 AI Tutor:</strong> Thinking... 💭`;
+    typingBubble.innerHTML = `<strong>AI Tutor:</strong> Thinking...`;
     chatMessages.appendChild(typingBubble);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -1130,7 +1633,7 @@ function sendAiChatMessage() {
 
         const aiBubble = document.createElement("div");
         aiBubble.className = "chat-bubble ai";
-        aiBubble.innerHTML = `<strong>🤖 AI Tutor:</strong><br>${formatMarkdown(data.response)}`;
+        aiBubble.innerHTML = `<strong>AI Tutor:</strong><br>${formatMarkdown(data.response)}`;
         chatMessages.appendChild(aiBubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     })
@@ -1140,17 +1643,18 @@ function sendAiChatMessage() {
 
         const errBubble = document.createElement("div");
         errBubble.className = "chat-bubble ai text-danger";
-        errBubble.innerHTML = `<strong>❌ Error:</strong> Failed to get response: ${err.message}`;
+        errBubble.innerHTML = `<strong>Error:</strong> Failed to get response: ${err.message}`;
         chatMessages.appendChild(errBubble);
     });
 }
 
 /**
- * Basic formatter to replace markdown text inside chatbot messages.
+ * Basic formatter to replace markdown text inside chatbot messages and sanitize emojis.
  */
 function formatMarkdown(text) {
     if (!text) return "";
-    let formatted = text
+    let clean = text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}]/gu, '');
+    let formatted = clean
         .replace(/\n/g, "<br>")
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
         .replace(/\*(.*?)\*/g, "<em>$1</em>");
@@ -1213,8 +1717,8 @@ function loadResources(topicName) {
             }
 
             resources.forEach(res => {
-                const typeIcon = res.resourceType === "VIDEO" ? "🎥 Video Lecture" : 
-                                 res.resourceType === "NOTES" ? "📄 Study Notes" : "📝 Practice Problems";
+                const typeIcon = res.resourceType === "VIDEO" ? '<i data-lucide="video"></i> Video Lecture' : 
+                                 res.resourceType === "NOTES" ? '<i data-lucide="file-text"></i> Study Notes' : '<i data-lucide="help-circle"></i> Practice Problems';
                 const typeBadgeClass = res.resourceType === "VIDEO" ? "badge-warning" : 
                                       res.resourceType === "NOTES" ? "badge-success" : "badge-danger";
 
@@ -1224,11 +1728,12 @@ function loadResources(topicName) {
                         <h3>${res.title}</h3>
                         <p class="resource-meta">Topic: <strong>${res.topicName}</strong></p>
                         <a href="${res.url}" target="_blank" class="btn btn-primary margin-top-md">
-                            Open Resource 🔗
+                            Open Resource <i data-lucide="external-link"></i>
                         </a>
                     </div>
                 `;
             });
+            refreshIcons();
         })
         .catch(err => console.error("Error loading resources:", err));
 }
